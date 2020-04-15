@@ -1,0 +1,5 @@
+profile: service
+defaultPackage: com.github.mdsina.corona
+---
+testFramework: junit
+sourceLanguage: java
