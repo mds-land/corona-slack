@@ -23,7 +23,20 @@ jobs:
       with:
         # Version Spec of the version to use.  Examples: 10.x, 10.15.1, >=10.15.0
         maven-version: 3.6.3
+    - uses: actions/cache@v1
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-    - name: Build the Docker image
-      run: docker build . -t corona-slack
+    - uses: whoan/docker-build-with-cache-action@master
+        with:
+          username: "${{ secrets.DOCKER_USERNAME }}"
+          password: "${{ secrets.DOCKER_PASSWORD }}"
+          image_name: mdsina/corona-slack
+          image_tag: latest
+          context: corona-slack
+#    - name: Build the Docker image
+#      run: docker build . -t corona-slack
