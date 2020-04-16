@@ -1,0 +1,16 @@
+{
+    "rules": [
+        {
+            "excludeClasses": "com.oracle.svm.**"
+        },
+        {
+            "excludeClasses": "io.micronaut.**"
+        },
+        {
+            "excludeClasses": "java.**"
+        },
+        {
+            "excludeClasses": "sun.**"
+        }
+    ]
+}
