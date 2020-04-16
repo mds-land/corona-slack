@@ -1,0 +1,22 @@
+[Unit]
+Description=corona-slack Service
+After=docker.service
+Requires=docker.service
+
+# /opt/corona-slack/env.list - should contain slack envs:
+# SLACK_CHANNEL - slack channel id to send daily statistics
+# SLACK_TOKEN - slack bot token
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecStartPre=-/usr/bin/docker stop docker.corona-slack.service
+ExecStartPre=-/usr/bin/docker rm docker.corona-slack.service
+ExecStartPre=/usr/bin/docker pull mdsina/corona-slack:latest
+ExecStart=/usr/bin/docker run --rm --name docker.corona-slack.service \
+	--env-file /opt/corona-slack/env.list \
+    -p 8082:8080 \
+    mdsina/corona-slack:latest
+
+[Install]
+WantedBy=default.target
