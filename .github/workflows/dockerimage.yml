@@ -37,6 +37,5 @@ jobs:
         password: "${{ secrets.DOCKER_PASSWORD }}"
         image_name: mdsina/corona-slack
         image_tag: latest
-        context: corona-slack
 #    - name: Build the Docker image
 #      run: docker build . -t corona-slack
