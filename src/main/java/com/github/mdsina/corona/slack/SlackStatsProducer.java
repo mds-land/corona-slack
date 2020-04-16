@@ -1,9 +1,10 @@
-package com.github.mdsina.corona;
+package com.github.mdsina.corona.slack;
 
 import static com.slack.api.model.block.Blocks.divider;
 import static com.slack.api.model.block.Blocks.section;
 import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
 
+import com.github.mdsina.corona.CoronaStatsClient;
 import com.slack.api.methods.AsyncMethodsClient;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.model.block.LayoutBlock;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 import javax.inject.Singleton;
 
 @Singleton
-public class SlackStatsSender {
+public class SlackStatsProducer {
 
     private static final Map<String, String> COUNTRY_ICONS = Map.of(
         "Russia", ":flag-ru:",
@@ -35,7 +36,7 @@ public class SlackStatsSender {
     private final CoronaStatsClient coronaStatsClient;
     private final String channel;
 
-    public SlackStatsSender(
+    public SlackStatsProducer(
         AsyncMethodsClient slackMethodsClient,
         CoronaStatsClient coronaStatsClient,
         @Value("${slack.channel:}") String channel
@@ -52,16 +53,10 @@ public class SlackStatsSender {
      * @throws InterruptedException
      */
     public void sendStats() throws ExecutionException, InterruptedException {
-        Map allCountriesStat = getAllCountriesStat();
-
-        List<LayoutBlock> blocks = createBlocks(MAIN_COUNTRIES, allCountriesStat);
-        blocks.add(blocks.size(), divider());
-        blocks.addAll(blocks.size(), createBlocks(TOP_COUNTRIES, allCountriesStat));
-
         slackMethodsClient.chatPostMessage(
             ChatPostMessageRequest.builder()
                 .channel(channel)
-                .blocks(blocks)
+                .blocks(getSlackBlocksWithData())
 //                .blocks(asBlocks(
 
 //                    divider(),
@@ -83,6 +78,16 @@ public class SlackStatsSender {
 //                ))
                 .build()
         ).get();
+    }
+
+    public List<LayoutBlock> getSlackBlocksWithData() {
+        Map allCountriesStat = getAllCountriesStat();
+
+        List<LayoutBlock> blocks = createBlocks(MAIN_COUNTRIES, allCountriesStat);
+        blocks.add(blocks.size(), divider());
+        blocks.addAll(blocks.size(), createBlocks(TOP_COUNTRIES, allCountriesStat));
+
+        return blocks;
     }
 
     private static List<LayoutBlock> createBlocks(List<String> countries, Map allStats) {

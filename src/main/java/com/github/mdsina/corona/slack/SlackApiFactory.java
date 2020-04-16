@@ -1,4 +1,4 @@
-package com.github.mdsina.corona;
+package com.github.mdsina.corona.slack;
 
 import com.slack.api.Slack;
 import com.slack.api.methods.AsyncMethodsClient;
