@@ -1,5 +1,6 @@
 {
   "resources":[
+    {"pattern":"\\QMETA-INF/services/com.fasterxml.jackson.databind.Module\\E"},
     {"pattern":"\\Qapplication.yml\\E"}, 
     {"pattern":"\\Qlogback.xml\\E"}
   ],
