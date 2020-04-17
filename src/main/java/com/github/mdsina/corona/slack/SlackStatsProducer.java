@@ -59,25 +59,6 @@ public class SlackStatsProducer {
             ChatPostMessageRequest.builder()
                 .channel(channel)
                 .blocks(getSlackBlocksWithDataForTop())
-//                .blocks(asBlocks(
-
-//                    divider(),
-//                    section(s -> s.text(markdownText("Зараженных за сегодня: *+" + stats.get("todayCases") + "*"))),
-//                    section(s -> s.text(markdownText("Смертей за сегодня: *+" + stats.get("todayDeaths") + "*"))),
-//                    divider(),
-//                    section(s -> s.text(markdownText("Всего зараженных: " + stats.get("cases")))),
-//                    section(s -> s.text(markdownText("Всего смертей: " + stats.get("deaths")))),
-//                    section(s -> s.text(markdownText("Всего излечилось: " + stats.get("recovered")))),
-//                    divider(),
-//                    section(s -> s.text(markdownText("Количество активно больных: " + stats.get("active")))),
-//                    section(s -> s.text(markdownText("В тяжелом состоянии всего: " + stats.get("critical")))),
-//                    divider(),
-//                    section(s -> s.text(markdownText("Протестировано всего: " + stats.get("tests")))),
-//                    divider(),
-//                    section(s -> s.text(markdownText(
-//                        "Статистика обновлена " + Instant.ofEpochMilli((long) stats.get("updated"))
-//                    )))
-//                ))
                 .build()
         ).get();
     }
