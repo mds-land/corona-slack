@@ -27,8 +27,8 @@ public class DailyJobs {
         this.taskScheduler = taskScheduler;
     }
 
-//    @Scheduled(initialDelay = "10s", cron = "0 30 4 1/1 * ?")
-    @Scheduled(fixedDelay = "60s")
+    @Scheduled(initialDelay = "10s", cron = "0 30 4 1/1 * ?")
+//    @Scheduled(fixedDelay = "60s")
     void sendCoronaStats() {
         try {
             slackStatsProducer.sendStats();
