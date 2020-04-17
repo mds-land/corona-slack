@@ -104,6 +104,10 @@ public class SlackStatsProducer {
             .map(country -> {
                 Map stats = (Map) allStats.get(country);
 
+                if (stats == null) {
+                    return section(s -> s.text(markdownText("Unknown country " + country)));
+                }
+
                 return section(s -> s.text(markdownText(String.format(
                     "%s *%s*: :pill: %s (*+%s*)  :skull_and_crossbones: %s (*+%s*)",
                     COUNTRY_ICONS.getOrDefault(country, ":world_map:"),

@@ -177,7 +177,8 @@
   "name":"com.slack.api.model.block.DividerBlock",
   "allDeclaredFields":true,
   "allDeclaredMethods":true,
-  "allDeclaredConstructors":true
+  "allDeclaredConstructors":true,
+    "fields":[{"name":"type", "allowWrite" : true}]
 },
 {
   "name":"com.slack.api.model.block.LayoutBlock",
@@ -187,13 +188,15 @@
   "name":"com.slack.api.model.block.SectionBlock",
   "allDeclaredFields":true,
   "allDeclaredMethods":true,
-  "allDeclaredConstructors":true
+  "allDeclaredConstructors":true,
+  "fields":[{"name":"type", "allowWrite" : true}]
 },
 {
   "name":"com.slack.api.model.block.composition.MarkdownTextObject",
   "allDeclaredFields":true,
   "allDeclaredMethods":true,
-  "allDeclaredConstructors":true
+  "allDeclaredConstructors":true,
+    "fields":[{"name":"type", "allowWrite" : true}]
 },
 {
   "name":"com.slack.api.model.block.composition.TextObject",
