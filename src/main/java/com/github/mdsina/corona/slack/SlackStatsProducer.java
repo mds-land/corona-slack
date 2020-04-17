@@ -109,8 +109,8 @@ public class SlackStatsProducer {
     }
 
     private Map getAllCountriesStat() {
-        List<Map> stats = coronaStatsClient.getAllStat().blockingGet();
-        stats.add(coronaStatsClient.getCountryStat("World").blockingGet());
+        List<Map> stats = coronaStatsClient.getAllCountriesStat().blockingGet();
+        stats.add(coronaStatsClient.getWorldStat().blockingGet());
 
         return stats.stream().collect(Collectors.toMap(v -> v.get("country"), v -> v));
     }

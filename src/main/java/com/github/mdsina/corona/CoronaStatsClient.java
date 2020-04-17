@@ -10,12 +10,15 @@ import java.util.List;
 import java.util.Map;
 
 @Retryable(delay = "2s")
-@Client("https://corona.lmao.ninja")
+@Client("https://corona.lmao.ninja/v2")
 public interface CoronaStatsClient {
 
     @Get(value = "/countries/{country}", processes = MediaType.APPLICATION_JSON)
     Single<Map> getCountryStat(@PathVariable String country);
 
     @Get(value = "/countries/", processes = MediaType.APPLICATION_JSON)
-    Single<List<Map>> getAllStat();
+    Single<List<Map>> getAllCountriesStat();
+
+    @Get(value = "/all", processes = MediaType.APPLICATION_JSON)
+    Single<Map> getWorldStat();
 }
