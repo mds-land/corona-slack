@@ -56,7 +56,7 @@ public class SlackStatsProducer {
         slackMethodsClient.chatPostMessage(
             ChatPostMessageRequest.builder()
                 .channel(channel)
-                .blocks(getSlackBlocksWithData())
+                .blocks(getSlackBlocksWithDataForTop())
 //                .blocks(asBlocks(
 
 //                    divider(),
@@ -80,12 +80,21 @@ public class SlackStatsProducer {
         ).get();
     }
 
-    public List<LayoutBlock> getSlackBlocksWithData() {
+    public List<LayoutBlock> getSlackBlocksWithDataForTop() {
         Map allCountriesStat = getAllCountriesStat();
 
         List<LayoutBlock> blocks = createBlocks(MAIN_COUNTRIES, allCountriesStat);
         blocks.add(blocks.size(), divider());
         blocks.addAll(blocks.size(), createBlocks(TOP_COUNTRIES, allCountriesStat));
+
+        return blocks;
+    }
+
+    public List<LayoutBlock> getSlackBlocksWithData(List<String> countries) {
+        Map allCountriesStat = getAllCountriesStat();
+
+        List<LayoutBlock> blocks = createBlocks(countries, allCountriesStat);
+        blocks.add(blocks.size(), divider());
 
         return blocks;
     }
@@ -97,7 +106,7 @@ public class SlackStatsProducer {
 
                 return section(s -> s.text(markdownText(String.format(
                     "%s *%s*: :pill: %s (*+%s*)  :skull_and_crossbones: %s (*+%s*)",
-                    COUNTRY_ICONS.get(country),
+                    COUNTRY_ICONS.getOrDefault(country, ":world_map:"),
                     country,
                     stats.get("cases"),
                     stats.get("todayCases"),

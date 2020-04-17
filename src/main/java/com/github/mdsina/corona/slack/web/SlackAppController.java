@@ -5,6 +5,7 @@ import static com.slack.api.model.block.composition.BlockCompositions.markdownTe
 
 import com.github.mdsina.corona.slack.SlackStatsProducer;
 import com.slack.api.model.block.LayoutBlock;
+import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
@@ -31,9 +32,16 @@ public class SlackAppController {
 
         logger.debug(body.toString());
 
+        String commandText = (String) body.get("text");
+        List<String> countries = List.of(StringUtils.tokenizeToStringArray(commandText, ","));
+
         List<LayoutBlock> blocks;
         try {
-            blocks = producer.getSlackBlocksWithData();
+            if (countries.isEmpty()) {
+                blocks = producer.getSlackBlocksWithDataForTop();
+            } else {
+                blocks = producer.getSlackBlocksWithData(countries);
+            }
         } catch (Throwable e) {
             logger.error("Error on slack api call:", e);
             blocks = List.of(section(s -> s.text(markdownText(
