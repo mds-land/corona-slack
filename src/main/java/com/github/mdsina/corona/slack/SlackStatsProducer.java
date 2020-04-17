@@ -12,13 +12,13 @@ import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.element.BlockElements;
 import io.micronaut.context.annotation.Value;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 import javax.inject.Singleton;
 
 @Singleton
@@ -83,37 +83,48 @@ public class SlackStatsProducer {
     }
 
     private static List<LayoutBlock> createBlocks(List<String> countries, Map<String, Map> allStats) {
-        return countries.stream()
-            .map(country -> {
-                String lcCountry = country.toLowerCase();
+        var blocks = new HashMap<Object, LayoutBlock>();
 
-                Optional<Object> countryStats = Optional
-                    .ofNullable(allStats.get("named").get(lcCountry))
-                    .or(() -> Optional.ofNullable(allStats.get("iso2").get(lcCountry)))
-                    .or(() -> Optional.ofNullable(allStats.get("iso3").get(lcCountry)));
+        for (String country : countries) {
+            String lcCountry = country.toLowerCase();
 
-                if (countryStats.isEmpty()) {
-                    String tpl = FUNNY_TPLS.get(new Random().nextInt(FUNNY_TPLS.size()));
-                    return section(s -> s.text(markdownText(String.format(tpl, country))));
+            Optional<Object> countryStats = Optional
+                .ofNullable(allStats.get("named").get(lcCountry))
+                .or(() -> Optional.ofNullable(allStats.get("iso2").get(lcCountry)))
+                .or(() -> Optional.ofNullable(allStats.get("iso3").get(lcCountry)));
+
+            if (countryStats.isEmpty()) {
+                if (blocks.containsKey(lcCountry)) {
+                    continue;
                 }
+                String tpl = FUNNY_TPLS.get(new Random().nextInt(FUNNY_TPLS.size()));
+                blocks.put(lcCountry, section(s -> s.text(markdownText(String.format(tpl, country)))));
+                continue;
+            }
 
-                Map stats = (Map) countryStats.get();
+            Map stats = (Map) countryStats.get();
+            Object realCountryName = stats.get("country");
 
-                String flagUrl = (String) ((Map) stats.get("countryInfo")).get("flag");
+            if (blocks.containsKey(realCountryName)) {
+                continue;
+            }
 
-                return context(List.of(
-                    BlockElements.image(s -> s.imageUrl(flagUrl).altText("Country Flag")),
-                    markdownText(String.format(
-                        "*%s*: :pill: %s (*+%s*)  :skull_and_crossbones: %s (*+%s*)",
-                        stats.get("country"),
-                        stats.get("cases"),
-                        stats.get("todayCases"),
-                        stats.get("deaths"),
-                        stats.get("todayDeaths")
-                    ))
-                ));
-            })
-            .collect(Collectors.toList());
+            String flagUrl = (String) ((Map) stats.get("countryInfo")).get("flag");
+
+            blocks.put(realCountryName, context(List.of(
+                BlockElements.image(s -> s.imageUrl(flagUrl).altText("Country Flag")),
+                markdownText(String.format(
+                    "*%s*: :pill: %s (*+%s*)  :skull_and_crossbones: %s (*+%s*)",
+                    stats.get("country"),
+                    stats.get("cases"),
+                    stats.get("todayCases"),
+                    stats.get("deaths"),
+                    stats.get("todayDeaths")
+                ))
+            )));
+        }
+
+        return new ArrayList<>(blocks.values());
     }
 
     private Map<String, Map> getAllCountriesStat() {

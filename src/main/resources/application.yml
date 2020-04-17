@@ -1,3 +1,6 @@
 micronaut:
   application:
     name: corona-slack
+
+jackson:
+  propertyNamingStrategy: SNAKE_CASE
