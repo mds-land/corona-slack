@@ -1,6 +1,7 @@
 package com.github.mdsina.corona;
 
 import com.github.mdsina.corona.slack.SlackStatsProducer;
+import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.TaskScheduler;
 import io.micronaut.scheduling.annotation.Scheduled;
@@ -28,10 +29,15 @@ public class DailyJobs {
     }
 
     @Scheduled(initialDelay = "10s", cron = "0 30 4 1/1 * ?")
-//    @Scheduled(fixedDelay = "60s")
+//    @Scheduled(fixedDelay = "10s")
     void sendCoronaStats() {
+        logger.debug("start daily task");
         try {
-            slackStatsProducer.sendStats();
+            ChatPostMessageResponse response = slackStatsProducer.sendStats();
+            if (response.getError() != null) {
+                throw new RuntimeException(response.toString());
+            }
+            logger.info("end daily task");
         } catch (Throwable e) {
             logger.error("Error occurred on sending data to slack channel. Task will be rescheduled.", e);
             taskScheduler.schedule(Duration.ofSeconds(30L), this::sendCoronaStats);

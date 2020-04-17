@@ -10,6 +10,7 @@
     </appender>
 
     <logger name="com.github.mdsina.corona" level="debug" />
+    <logger name="com.slack.api" level="debug" />
 
     <root level="info">
         <appender-ref ref="STDOUT" />
