@@ -7,7 +7,7 @@ COVID-19 datasource: https://corona.lmao.ninja
 ## Features
 
 - Send statistics on daily basis (at 4:00AM UTC+0)
-- Send statistics in chat by slack command `/corona-stats`
+- Send statistics in chat by slack command using endpoint `/corona/stats`
 
 ![Coronavirus Statistics Example](./media/corona-stats.png)
 
