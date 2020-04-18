@@ -29,7 +29,6 @@ public class DailyJobs {
     }
 
     @Scheduled(initialDelay = "10s", cron = "0 30 4 1/1 * ?")
-//    @Scheduled(fixedDelay = "10s")
     void sendCoronaStats() {
         logger.debug("start daily task");
         try {

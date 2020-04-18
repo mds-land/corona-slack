@@ -83,6 +83,7 @@ public class SlackStatsProducer {
     }
 
     private static List<LayoutBlock> createBlocks(List<String> countries, Map<String, Map> allStats) {
+        var actualOrderedKeys = new ArrayList<>();
         var blocks = new HashMap<Object, LayoutBlock>();
 
         for (String country : countries) {
@@ -99,6 +100,7 @@ public class SlackStatsProducer {
                 }
                 String tpl = FUNNY_TPLS.get(new Random().nextInt(FUNNY_TPLS.size()));
                 blocks.put(lcCountry, section(s -> s.text(markdownText(String.format(tpl, country)))));
+                actualOrderedKeys.add(lcCountry);
                 continue;
             }
 
@@ -122,9 +124,13 @@ public class SlackStatsProducer {
                     stats.get("todayDeaths")
                 ))
             )));
+            actualOrderedKeys.add(realCountryName);
         }
 
-        return new ArrayList<>(blocks.values());
+        var result = new ArrayList<LayoutBlock>();
+        actualOrderedKeys.forEach(k -> result.add(blocks.get(k)));
+
+        return result;
     }
 
     private Map<String, Map> getAllCountriesStat() {
