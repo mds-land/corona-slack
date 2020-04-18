@@ -30,7 +30,7 @@ public class WotdScheduledTasks {
         this.channel = channel;
     }
 
-    @Scheduled(initialDelay = "10s", cron = "0 0 10 1/1 * ?")
+    @Scheduled(cron = "0 15 10 1/1 * ?")
 //    @Scheduled(fixedDelay = "20s")
     void sendCoronaStats() {
         retryableTaskRunner.run(() -> slackMessageSender.sendMessage(
