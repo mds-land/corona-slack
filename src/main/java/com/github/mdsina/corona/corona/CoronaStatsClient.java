@@ -1,4 +1,4 @@
-package com.github.mdsina.corona;
+package com.github.mdsina.corona.corona;
 
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Get;

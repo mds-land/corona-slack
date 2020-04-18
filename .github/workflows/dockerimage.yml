@@ -10,6 +10,7 @@ on:
       - 'native-image-filter.json'
       - 'systemd/**'
       - 'media/**'
+      - 'lombok.config'
   pull_request:
     branches: [ master ]
 

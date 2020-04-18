@@ -1,28 +1,27 @@
-package com.github.mdsina.corona.slack;
+package com.github.mdsina.corona.corona;
 
 import static com.slack.api.model.block.Blocks.context;
 import static com.slack.api.model.block.Blocks.divider;
 import static com.slack.api.model.block.Blocks.section;
 import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
+import static java.util.Objects.requireNonNull;
 
-import com.github.mdsina.corona.CoronaStatsClient;
-import com.slack.api.methods.AsyncMethodsClient;
-import com.slack.api.methods.request.chat.ChatPostMessageRequest;
-import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.github.mdsina.corona.slack.SlackLayoutBuilder;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.element.BlockElements;
-import io.micronaut.context.annotation.Value;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import javax.inject.Singleton;
 
+@SuppressWarnings("unchecked")
 @Singleton
-public class SlackStatsProducer {
+public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
+
+    public static final String TYPE = "corona";
 
     private static final List<String> MAIN_COUNTRIES = List.of("russia", "ukraine", "new zealand", "uzbekistan");
     private static final List<String> TOP_COUNTRIES = List.of("world", "usa", "spain", "italy");
@@ -37,45 +36,30 @@ public class SlackStatsProducer {
         "Say hello to my little %s"
     );
 
-    private final AsyncMethodsClient slackMethodsClient;
-    private final CoronaStatsClient coronaStatsClient;
-    private final String channel;
+    @Override
+    public List<LayoutBlock> buildBlocks(Map<Object, ?> data) {
+        Map<String, Map> stat = (Map<String, Map>) requireNonNull(
+            data.get("allCountriesStat"),
+            "Stat data is required"
+        );
+        List<String> countries = (List<String>) data.get("countries");
 
-    public SlackStatsProducer(
-        AsyncMethodsClient slackMethodsClient,
-        CoronaStatsClient coronaStatsClient,
-        @Value("${slack.channel:}") String channel
-    ) {
-        this.slackMethodsClient = slackMethodsClient;
-        this.coronaStatsClient = coronaStatsClient;
-        this.channel = channel;
-    }
+        if (countries != null && !countries.isEmpty()) {
+            return getBlocksLayoutForCountries(countries, stat);
+        }
 
-    /**
-     * Send stats about coronavirus
-     */
-    public ChatPostMessageResponse sendStats() throws ExecutionException, InterruptedException {
-        return slackMethodsClient.chatPostMessage(
-            ChatPostMessageRequest.builder()
-                .channel(channel)
-                .blocks(getSlackBlocksWithDataForTop())
-                .build()
-        ).get();
-    }
-
-    public List<LayoutBlock> getSlackBlocksWithDataForTop() {
-        Map<String, Map> allCountriesStat = getAllCountriesStat();
-
-        List<LayoutBlock> blocks = createBlocks(MAIN_COUNTRIES, allCountriesStat);
-        blocks.add(blocks.size(), divider());
-        blocks.addAll(blocks.size(), createBlocks(TOP_COUNTRIES, allCountriesStat));
+        List<LayoutBlock> blocks = getBlocksLayoutForCountries(MAIN_COUNTRIES, stat);
+        blocks.addAll(blocks.size(), getBlocksLayoutForCountries(TOP_COUNTRIES, stat));
 
         return blocks;
     }
 
-    public List<LayoutBlock> getSlackBlocksWithData(List<String> countries) {
-        Map<String, Map> allCountriesStat = getAllCountriesStat();
+    @Override
+    public Object getType() {
+        return TYPE;
+    }
 
+    public List<LayoutBlock> getBlocksLayoutForCountries(List<String> countries, Map<String, Map> allCountriesStat) {
         List<LayoutBlock> blocks = createBlocks(countries, allCountriesStat);
         blocks.add(blocks.size(), divider());
 
@@ -131,42 +115,5 @@ public class SlackStatsProducer {
         actualOrderedKeys.forEach(k -> result.add(blocks.get(k)));
 
         return result;
-    }
-
-    private Map<String, Map> getAllCountriesStat() {
-        List<Map> stats = coronaStatsClient.getAllCountriesStat().blockingGet();
-        Map worldStat = coronaStatsClient.getWorldStat().blockingGet();
-        worldStat.put("country", "World");
-        worldStat.put("countryInfo", Map.of(
-            "iso2", "World",
-            "iso3", "World",
-            "flag", "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Emoji_u1f30d.svg/1024px-Emoji_u1f30d.svg.png"
-        ));
-        stats.add(worldStat);
-
-        var namedMap = new HashMap<>(stats.size());
-        var iso2Map = new HashMap<>(stats.size());
-        var iso3Map = new HashMap<>(stats.size());
-
-        for (Map stat : stats) {
-            namedMap.put(((String) stat.get("country")).toLowerCase(), stat);
-
-            Map info = (Map) stat.get("countryInfo");
-            Object iso2 = info.get("iso2");
-            Object iso3 = info.get("iso3");
-
-            if (iso2 != null) {
-                iso2Map.put(((String) iso2).toLowerCase(), stat);
-            }
-            if (iso3 != null) {
-                iso3Map.put(((String) iso3).toLowerCase(), stat);
-            }
-        }
-
-        return Map.of(
-            "named", namedMap,
-            "iso2", iso2Map,
-            "iso3", iso3Map
-        );
     }
 }
