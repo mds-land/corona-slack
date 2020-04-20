@@ -1,5 +1,7 @@
 package com.github.mdsina.corona.corona;
 
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,9 +14,28 @@ public class CoronaDataProvider {
 
     private final CoronaStatsClient coronaStatsClient;
 
-    public Map<String, Map> getAllCountriesStat() {
-        List<Map> stats = coronaStatsClient.getAllCountriesStat().blockingGet();
-        Map worldStat = coronaStatsClient.getWorldStat().blockingGet();
+    public Map<String, Map<String, Map>> get2DaysData() {
+        return Observable.zip(
+            coronaStatsClient.getAllCountriesStat()
+                .subscribeOn(Schedulers.newThread())
+                .toObservable(),
+            coronaStatsClient.getWorldStat()
+                .subscribeOn(Schedulers.newThread())
+                .toObservable(),
+            coronaStatsClient.getAllCountriesStat(true)
+                .subscribeOn(Schedulers.newThread())
+                .toObservable(),
+            coronaStatsClient.getWorldStat(true)
+                .toObservable()
+                .subscribeOn(Schedulers.newThread()),
+            (t1, t2, t3, t4) -> Map.of(
+                "todayStat", processStat(t1, t2),
+                "yesterdayStat",  processStat(t3, t4)
+            )
+        ).singleOrError().blockingGet();
+    }
+
+    private Map<String, Map> processStat(List<Map> stats, Map worldStat) {
         worldStat.put("country", "World");
         worldStat.put("countryInfo", Map.of(
             "iso2", "World",

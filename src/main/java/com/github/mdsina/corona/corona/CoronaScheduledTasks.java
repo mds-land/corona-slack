@@ -30,14 +30,21 @@ public class CoronaScheduledTasks {
         this.channel = channel;
     }
 
-    @Scheduled(initialDelay = "10s", cron = "0 0 5 1/1 * ?")
+    @Scheduled(initialDelay = "10s", cron = "0 0 12 1/1 * ?")
     void sendCoronaStats() {
-        retryableTaskRunner.run(() -> slackMessageSender.sendMessage(
-            channel,
-            SlackLayoutEntity.builder()
-                .layoutBuilderType(CoronaSlackLayoutBuilder.TYPE)
-                .layoutData(Map.of("allCountriesStat", coronaDataProvider.getAllCountriesStat()))
-                .build()
-        ));
+        retryableTaskRunner.run(() -> {
+            Map<String, Map<String, Map>> daysData = coronaDataProvider.get2DaysData();
+
+            slackMessageSender.sendMessage(
+                channel,
+                SlackLayoutEntity.builder()
+                    .layoutBuilderType(CoronaSlackLayoutBuilder.TYPE)
+                    .layoutData(Map.of(
+                        "todayStat", daysData.get("todayStat"),
+                        "yesterdayStat", daysData.get("yesterdayStat")
+                    ))
+                    .build()
+            );
+        });
     }
 }

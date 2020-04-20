@@ -13,6 +13,7 @@ import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Post;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,11 +31,18 @@ public class CoronaCommandsController {
         log.debug(body.toString());
 
         String commandText = (String) body.get("text");
-        List<String> countries = List.of(StringUtils.tokenizeToStringArray(commandText, ","));
+        List<String> countries = Optional.ofNullable(commandText)
+            .map(t -> List.of(StringUtils.tokenizeToStringArray(t, ",")))
+            .orElse(List.of());
 
         List<LayoutBlock> blocks;
         try {
-            blocks = layoutBuilder.getBlocksLayoutForCountries(countries, dataProvider.getAllCountriesStat());
+            Map<String, Map<String, Map>> daysData = dataProvider.get2DaysData();
+            blocks = layoutBuilder.buildBlocks(Map.of(
+                "todayStat", daysData.get("todayStat"),
+                "yesterdayStat", daysData.get("yesterdayStat"),
+                "countries", countries
+            ));
         } catch (Throwable e) {
             log.error("Error on build response:", e);
             blocks = List.of(section(s -> s.text(markdownText(

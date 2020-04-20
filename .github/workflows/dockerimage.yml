@@ -11,6 +11,7 @@ on:
       - 'systemd/**'
       - 'media/**'
       - 'lombok.config'
+      - '.gitignore'
   pull_request:
     branches: [ master ]
 

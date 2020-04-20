@@ -38,18 +38,22 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
 
     @Override
     public List<LayoutBlock> buildBlocks(Map<Object, ?> data) {
-        Map<String, Map> stat = (Map<String, Map>) requireNonNull(
-            data.get("allCountriesStat"),
-            "Stat data is required"
+        Map<String, Map> todayStat = (Map<String, Map>) requireNonNull(
+            data.get("todayStat"),
+            "todayStat is required"
+        );
+        Map<String, Map> yesterdayStat = (Map<String, Map>) requireNonNull(
+            data.get("yesterdayStat"),
+            "yesterdayStat is required"
         );
         List<String> countries = (List<String>) data.get("countries");
 
         if (countries != null && !countries.isEmpty()) {
-            return getBlocksLayoutForCountries(countries, stat);
+            return getBlocksLayoutForCountries(countries, todayStat, yesterdayStat);
         }
 
-        List<LayoutBlock> blocks = getBlocksLayoutForCountries(MAIN_COUNTRIES, stat);
-        blocks.addAll(blocks.size(), getBlocksLayoutForCountries(TOP_COUNTRIES, stat));
+        List<LayoutBlock> blocks = getBlocksLayoutForCountries(MAIN_COUNTRIES, todayStat, yesterdayStat);
+        blocks.addAll(blocks.size(), getBlocksLayoutForCountries(TOP_COUNTRIES, todayStat, yesterdayStat));
 
         return blocks;
     }
@@ -59,14 +63,22 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
         return TYPE;
     }
 
-    public List<LayoutBlock> getBlocksLayoutForCountries(List<String> countries, Map<String, Map> allCountriesStat) {
-        List<LayoutBlock> blocks = createBlocks(countries, allCountriesStat);
+    public List<LayoutBlock> getBlocksLayoutForCountries(
+        List<String> countries,
+        Map<String, Map> todayStat,
+        Map<String, Map> yesterdayStat
+    ) {
+        List<LayoutBlock> blocks = createBlocks(countries, todayStat, yesterdayStat);
         blocks.add(blocks.size(), divider());
 
         return blocks;
     }
 
-    private static List<LayoutBlock> createBlocks(List<String> countries, Map<String, Map> allStats) {
+    private static List<LayoutBlock> createBlocks(
+        List<String> countries,
+        Map<String, Map> todayStat,
+        Map<String, Map> yesterdayStat
+    ) {
         var actualOrderedKeys = new ArrayList<>();
         var blocks = new HashMap<Object, LayoutBlock>();
 
@@ -74,9 +86,9 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
             String lcCountry = country.toLowerCase();
 
             Optional<Object> countryStats = Optional
-                .ofNullable(allStats.get("named").get(lcCountry))
-                .or(() -> Optional.ofNullable(allStats.get("iso2").get(lcCountry)))
-                .or(() -> Optional.ofNullable(allStats.get("iso3").get(lcCountry)));
+                .ofNullable(todayStat.get("named").get(lcCountry))
+                .or(() -> Optional.ofNullable(todayStat.get("iso2").get(lcCountry)))
+                .or(() -> Optional.ofNullable(todayStat.get("iso3").get(lcCountry)));
 
             if (countryStats.isEmpty()) {
                 if (blocks.containsKey(lcCountry)) {
@@ -95,17 +107,21 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
                 continue;
             }
 
+            Map yesterdayCountryStat = (Map) yesterdayStat.get("named").get(((String) realCountryName).toLowerCase());
+
             String flagUrl = (String) ((Map) stats.get("countryInfo")).get("flag");
 
             blocks.put(realCountryName, context(List.of(
                 BlockElements.image(s -> s.imageUrl(flagUrl).altText("Country Flag")),
                 markdownText(String.format(
-                    "*%s*: :pill: %s (*+%s*)  :skull_and_crossbones: %s (*+%s*)",
+                    "*%s*: :pill: *+%s* (%s)  :skull_and_crossbones: *+%s* (%s)  :yin_yang:  %s / %s",
                     stats.get("country"),
-                    stats.get("cases"),
                     stats.get("todayCases"),
-                    stats.get("deaths"),
-                    stats.get("todayDeaths")
+                    yesterdayCountryStat.get("todayCases"),
+                    stats.get("todayDeaths"),
+                    yesterdayCountryStat.get("todayDeaths"),
+                    stats.get("cases"),
+                    stats.get("deaths")
                 ))
             )));
             actualOrderedKeys.add(realCountryName);
