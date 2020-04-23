@@ -1,15 +1,19 @@
 #FROM oracle/graalvm-ce:20.0.0-java8 as graalvm
 # For JDK 11
 FROM oracle/graalvm-ce:20.0.0-java11 as graalvm
-RUN gu install native-image
+# RUN gu install native-image
 
 COPY . /home/app/corona-slack
 WORKDIR /home/app/corona-slack
 
-RUN native-image --no-server -cp target/corona-slack-*.jar
+# Native image currently not working because AWT
+# RUN native-image --no-server -cp target/corona-slack-*.jar
 
-FROM frolvlad/alpine-glibc
-RUN apk update && apk add libstdc++
+#FROM frolvlad/alpine-glibc
+#RUN apk update && apk add libstdc++
+RUN mkdir -p /app/data
+RUN ls /home/app/corona-slack
 EXPOSE 8080
-COPY --from=graalvm /home/app/corona-slack/corona-slack /app/corona-slack
-ENTRYPOINT ["/app/corona-slack"]
+RUN cp /home/app/corona-slack/target/corona-slack-*.jar /app/corona-slack
+#COPY --from=graalvm /home/app/corona-slack/corona-slack /app/corona-slack
+ENTRYPOINT ["java", "-Xmx256M", "-jar", "/app/corona-slack"]

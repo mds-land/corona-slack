@@ -18,7 +18,7 @@ public class WotdSlackLayoutBuilder implements SlackLayoutBuilder {
     public static final String TYPE = "wotd";
 
     @Override
-    public List<LayoutBlock> buildBlocks(Map<Object, ?> data) {
+    public List<LayoutBlock> buildBlocks(Map<?, ?> data) {
         Wotd wotd = (Wotd) Objects.requireNonNull(data.get("wotd"));
 
         return List.of(

@@ -6,6 +6,6 @@ import java.util.Map;
 
 public interface SlackLayoutBuilder {
 
-    List<LayoutBlock> buildBlocks(Map<Object, ?> data);
+    List<LayoutBlock> buildBlocks(Map<?, ?> data);
     Object getType();
 }

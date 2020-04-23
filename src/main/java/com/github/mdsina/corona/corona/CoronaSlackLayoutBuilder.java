@@ -23,9 +23,6 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
 
     public static final String TYPE = "corona";
 
-    private static final List<String> MAIN_COUNTRIES = List.of("russia", "ukraine", "new zealand", "uzbekistan");
-    private static final List<String> TOP_COUNTRIES = List.of("world", "usa", "spain", "italy");
-
     private static final List<String> FUNNY_TPLS = List.of(
         "%s is no more...",
         "%s was burnt to ashes",
@@ -37,24 +34,19 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
     );
 
     @Override
-    public List<LayoutBlock> buildBlocks(Map<Object, ?> data) {
-        Map<String, Map> todayStat = (Map<String, Map>) requireNonNull(
+    public List<LayoutBlock> buildBlocks(Map<?, ?> data) {
+        var todayStat = (Map<String, Map>) requireNonNull(
             data.get("todayStat"),
             "todayStat is required"
         );
-        Map<String, Map> yesterdayStat = (Map<String, Map>) requireNonNull(
+        var yesterdayStat = (Map<String, Map>) requireNonNull(
             data.get("yesterdayStat"),
             "yesterdayStat is required"
         );
-        List<String> countries = (List<String>) data.get("countries");
+        var countries = (List<List<String>>) data.get("countries");
 
-        if (countries != null && !countries.isEmpty()) {
-            return getBlocksLayoutForCountries(countries, todayStat, yesterdayStat);
-        }
-
-        List<LayoutBlock> blocks = getBlocksLayoutForCountries(MAIN_COUNTRIES, todayStat, yesterdayStat);
-        blocks.addAll(blocks.size(), getBlocksLayoutForCountries(TOP_COUNTRIES, todayStat, yesterdayStat));
-
+        List<LayoutBlock> blocks = new ArrayList<>();
+        countries.forEach(c -> blocks.addAll(blocks.size(), getBlocksLayoutForCountries(c, todayStat, yesterdayStat)));
         return blocks;
     }
 

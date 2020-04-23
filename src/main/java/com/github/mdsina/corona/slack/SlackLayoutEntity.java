@@ -9,5 +9,5 @@ import lombok.Getter;
 public class SlackLayoutEntity {
 
     private final Object layoutBuilderType;
-    private final Map<Object, ?> layoutData;
+    private final Map<?, ?> layoutData;
 }

@@ -94,6 +94,13 @@
   "name":"com.fasterxml.jackson.databind.ser.Serializers[]"
 },
 {
+    "name":"com.slack.api.model.block.ImageBlock",
+    "allDeclaredFields":true,
+    "allDeclaredMethods":true,
+    "allDeclaredConstructors":true,
+    "fields":[{"name":"type", "allowWrite" : true}]
+},
+{
   "name":"com.slack.api.methods.response.auth.AuthTestResponse",
   "allDeclaredFields":true,
   "methods":[{"name":"<init>","parameterTypes":[] }]

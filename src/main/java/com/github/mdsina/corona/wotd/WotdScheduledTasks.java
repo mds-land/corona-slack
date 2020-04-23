@@ -5,9 +5,12 @@ import com.github.mdsina.corona.slack.SlackLayoutEntity;
 import com.github.mdsina.corona.slack.SlackMessageSender;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.scheduling.annotation.Scheduled;
+import io.reactivex.schedulers.Schedulers;
 import java.util.Map;
 import javax.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Singleton
 public class WotdScheduledTasks {
 
@@ -32,13 +35,20 @@ public class WotdScheduledTasks {
 
     @Scheduled(cron = "0 15 10 1/1 * ?")
 //    @Scheduled(fixedDelay = "20s")
-    void sendCoronaStats() {
-        retryableTaskRunner.run(() -> slackMessageSender.sendMessage(
-            channel,
-            SlackLayoutEntity.builder()
-                .layoutBuilderType(WotdSlackLayoutBuilder.TYPE)
-                .layoutData(Map.of("wotd", wotdParser.getAndParse()))
-                .build()
-        ));
+    void sendWotd() {
+        slackMessageSender
+            .sendMessage(
+                channel,
+                SlackLayoutEntity.builder()
+                    .layoutBuilderType(WotdSlackLayoutBuilder.TYPE)
+                    .layoutData(Map.of("wotd", wotdParser.getAndParse()))
+                    .build()
+            )
+            .subscribeOn(Schedulers.newThread())
+            .doOnError(e -> {
+                log.error("Error occurred on running task. Task will be rescheduled.", e);
+                retryableTaskRunner.run(this::sendWotd);
+            })
+            .subscribe();
     }
 }
