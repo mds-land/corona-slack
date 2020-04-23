@@ -18,7 +18,7 @@ public class ChartCreator {
     public String createChartFile(List<Date> xValues, Map<String, List<Integer>> yValues) throws IOException {
         XYChart chart = new XYChartBuilder()
             .width(1024)
-            .height(768)
+            .height(700)
             .title("COVID-19 Data from the JHU CSSE Data Repository")
             .xAxisTitle("Date")
             .yAxisTitle("Cases")
@@ -27,6 +27,7 @@ public class ChartCreator {
         chart.getStyler().setLegendPosition(LegendPosition.InsideNW);
         chart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Line);
         chart.getStyler().setYAxisDecimalPattern("#,###.##");
+        chart.getStyler().setYAxisLogarithmic(true);
         chart.getStyler().setPlotMargin(0);
         chart.getStyler().setPlotContentSize(.95);
 

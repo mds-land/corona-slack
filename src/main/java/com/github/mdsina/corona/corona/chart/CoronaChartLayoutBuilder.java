@@ -77,7 +77,12 @@ public class CoronaChartLayoutBuilder implements SlackLayoutBuilder {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            blocks.add(Blocks.image(b -> b.imageUrl(chartUrl + fileName).altText("Corona Stats")));
+            blocks.add(Blocks.image(b ->
+                b.imageUrl(chartUrl + fileName)
+                    .altText("Corona Stats")
+                    .imageWidth(360)
+                    .imageHeight(246)
+            ));
         });
 
         return blocks;
