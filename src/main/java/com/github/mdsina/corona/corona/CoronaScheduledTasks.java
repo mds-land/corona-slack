@@ -31,7 +31,7 @@ public class CoronaScheduledTasks {
         this.channel = channel;
     }
 
-    @Scheduled(cron = "0 0 12 1/1 * ?")
+    @Scheduled(cron = "0 0 5,12 1/1 * ?")
     void sendCoronaStats() {
         coronaSlackDataService.getActualStatsBlocks(null)
             .flatMap(blocks -> slackMessageSender.sendMessage(channel, blocks))
