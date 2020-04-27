@@ -17,7 +17,7 @@ on:
 
 jobs:
 
-  build:
+  java-build:
 
     runs-on: ubuntu-latest
 
@@ -54,5 +54,46 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
         script: systemctl restart docker.corona-slack.service
+#    - name: Build the Docker image
+#      run: docker build . -t corona-slack
+
+  native-image-build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up GraalVM
+      uses: DeLaGuardo/setup-graalvm@3
+      with:
+        graalvm-version: '20.0.0.java11'
+    - name: Setup Maven
+      uses: stCarolas/setup-maven@v1
+      with:
+        # Version Spec of the version to use.  Examples: 10.x, 10.15.1, >=10.15.0
+        maven-version: 3.6.3
+    - uses: actions/cache@v1
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+    - uses: whoan/docker-build-with-cache-action@master
+      with:
+        dockerfile: ./Dockerfile.native-image
+        username: "${{ secrets.DOCKER_USERNAME }}"
+        password: "${{ secrets.DOCKER_PASSWORD }}"
+        image_name: mdsina/corona-slack
+        image_tag: native-image-latest
+#    - name: executing remote ssh commands using password
+#      uses: appleboy/ssh-action@master
+#      with:
+#        host: ${{ secrets.SSH_HOST }}
+#        username: ${{ secrets.SSH_USERNAME }}
+#        password: ${{ secrets.SSH_PASSWORD }}
+#        port: ${{ secrets.SSH_PORT }}
+#        script: systemctl restart docker.corona-slack.service
 #    - name: Build the Docker image
 #      run: docker build . -t corona-slack
