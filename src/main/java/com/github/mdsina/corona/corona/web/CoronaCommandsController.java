@@ -4,6 +4,7 @@ import com.github.mdsina.corona.corona.CoronaSlackDataService;
 import com.github.mdsina.corona.slack.SlackMessageSender;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.core.util.StringUtils;
+import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.reactivestreams.Publisher;
 
 @Slf4j
 @Controller("/corona")
@@ -82,15 +84,23 @@ public class CoronaCommandsController {
     @Get(value = "/callback{?code}", produces = MediaType.TEXT_HTML)
     public Flowable<String> callback(@Nullable String code) {
         URI redirectUrl = UriBuilder.of(baseUrl).path("corona/callback").build();
-        var resultUrl = UriBuilder.of("/api/oauth.access")
+        var resultUrl = UriBuilder.of("/api/oauth.v2.access")
             .queryParam("client_id", clientId)
             .queryParam("client_secret", clientSecret)
             .queryParam("code", code)
             .queryParam("redirect_uri", redirectUrl)
             .toString();
 
-        return slackHttpClient.retrieve(resultUrl)
+        return slackHttpClient.retrieve(HttpRequest.POST(resultUrl, ""), Map.class)
+            .flatMap(r -> {
+                boolean ok = Boolean.parseBoolean("" + r.get("ok"));
+                if (ok) {
+                    return Flowable.just(r);
+                }
+
+                return Flowable.error(new RuntimeException(r.toString()));
+            })
             .map(r -> "App installed. You can close this page.")
-            .onErrorReturnItem("App installation failed. Try again");
+            .onErrorReturn(e -> "App installation failed. " + e.getMessage() + ". Try again");
     }
 }
