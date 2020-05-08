@@ -91,7 +91,13 @@ public class CoronaCommandsController {
             .queryParam("redirect_uri", redirectUrl)
             .toString();
 
-        return slackHttpClient.retrieve(HttpRequest.POST(resultUrl, ""), Map.class)
+        return slackHttpClient
+            .retrieve(HttpRequest.POST(resultUrl, Map.of(
+                "client_id", clientId,
+                "client_secret", clientSecret,
+                "code", code,
+                "redirect_uri", redirectUrl
+            )).contentType(MediaType.APPLICATION_FORM_URLENCODED_TYPE), Map.class)
             .flatMap(r -> {
                 boolean ok = Boolean.parseBoolean("" + r.get("ok"));
                 if (ok) {
