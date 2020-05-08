@@ -12,6 +12,7 @@ on:
       - 'media/**'
       - 'lombok.config'
       - '.gitignore'
+      - '**.gitkeep'
   pull_request:
     branches: [ master ]
 
