@@ -17,6 +17,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -78,8 +79,8 @@ public class CoronaCommandsController {
             .orElse(List.of());
     }
 
-    @Get(value = "/callback{?code}", consumes = {MediaType.APPLICATION_FORM_URLENCODED, MediaType.APPLICATION_JSON}, produces = MediaType.TEXT_HTML)
-    public Flowable<String> callback(String code) {
+    @Get(value = "/callback{?code}", produces = MediaType.TEXT_HTML)
+    public Flowable<String> callback(@Nullable String code) {
         URI redirectUrl = UriBuilder.of(baseUrl).path("corona/callback").build();
         var resultUrl = UriBuilder.of("/api/oauth.access")
             .queryParam("client_id", clientId)
