@@ -10,6 +10,7 @@ on:
       - 'native-image-filter.json'
       - 'systemd/**'
       - 'media/**'
+      - 'docs/**'
       - 'lombok.config'
       - '.gitignore'
       - '**.gitkeep'
