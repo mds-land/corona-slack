@@ -10,6 +10,7 @@ import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.http.client.RxHttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.uri.UriBuilder;
@@ -82,13 +83,9 @@ public class CoronaCommandsController {
     }
 
     @Get(value = "/callback{?code}", produces = MediaType.TEXT_HTML)
-    public Flowable<String> callback(@Nullable String code) {
+    public Flowable<String> callback(@QueryValue String code) {
         URI redirectUrl = UriBuilder.of(baseUrl).path("corona/callback").build();
         var resultUrl = UriBuilder.of("/api/oauth.v2.access")
-            .queryParam("client_id", clientId)
-            .queryParam("client_secret", clientSecret)
-            .queryParam("code", code)
-            .queryParam("redirect_uri", redirectUrl)
             .toString();
 
         return slackHttpClient
