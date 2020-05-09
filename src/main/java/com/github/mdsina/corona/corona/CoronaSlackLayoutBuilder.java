@@ -9,6 +9,8 @@ import static java.util.Objects.requireNonNull;
 import com.github.mdsina.corona.slack.SlackLayoutBuilder;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.element.BlockElements;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -102,18 +104,17 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
             Map yesterdayCountryStat = (Map) yesterdayStat.get("named").get(((String) realCountryName).toLowerCase());
 
             String flagUrl = (String) ((Map) stats.get("countryInfo")).get("flag");
-            Object todayCases = Long.parseLong(stats.get("todayCases").toString());
-            if ((Long) todayCases > 0) {
-                todayCases = "+" + todayCases;
-            } else {
-                todayCases = "-";
-            }
+            LocalDate updated = LocalDate.from(Instant.ofEpochSecond(Long.parseLong(stats.get("updated").toString())));
+            boolean isNotUpdated = updated.getDayOfMonth() != LocalDate.now().getDayOfMonth();
 
-            Object todayDeaths = Long.parseLong(stats.get("todayDeaths").toString());
-            if ((Long) todayDeaths > 0) {
-                todayDeaths = "+" + todayDeaths;
-            } else {
+            String todayCases;
+            String todayDeaths;
+            if (isNotUpdated) {
+                todayCases = "-";
                 todayDeaths = "-";
+            } else {
+                todayCases = "+" + stats.get("todayCases");
+                todayDeaths = "+" + stats.get("todayDeaths");
             }
 
             blocks.put(realCountryName, context(List.of(
