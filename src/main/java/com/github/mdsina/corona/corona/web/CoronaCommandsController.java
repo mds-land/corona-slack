@@ -2,73 +2,73 @@ package com.github.mdsina.corona.corona.web;
 
 import com.github.mdsina.corona.corona.CoronaSlackDataService;
 import com.github.mdsina.corona.slack.SlackMessageSender;
-import io.micronaut.context.annotation.Value;
+import com.github.mdsina.corona.slack.SlackVerificationService;
+import com.github.mdsina.corona.slack.persistence.SlackTokensRepository;
 import io.micronaut.core.util.StringUtils;
-import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Header;
 import io.micronaut.http.annotation.Post;
-import io.micronaut.http.annotation.QueryValue;
-import io.micronaut.http.client.RxHttpClient;
-import io.micronaut.http.client.annotation.Client;
-import io.micronaut.http.uri.UriBuilder;
-import io.reactivex.Flowable;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.annotation.Nullable;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.reactivestreams.Publisher;
 
 @Slf4j
+@RequiredArgsConstructor
 @Controller("/corona")
 public class CoronaCommandsController {
 
     private final CoronaSlackDataService coronaSlackDataService;
     private final SlackMessageSender slackMessageSender;
-    private final String baseUrl;
-    private final String clientId;
-    private final String clientSecret;
-    private final RxHttpClient slackHttpClient;
+    private final SlackVerificationService verificationService;
+    private final SlackTokensRepository slackTokensRepository;
 
-    public CoronaCommandsController(
-        CoronaSlackDataService coronaSlackDataService,
-        SlackMessageSender slackMessageSender,
-        @Value("${corona.base.url:}") String baseUrl,
-        @Value("${slack.client.id:}") String clientId,
-        @Value("${slack.client.secret:}") String clientSecret,
-        @Client("https://slack.com") RxHttpClient slackHttpClient
+    @Post(value = "/stats", consumes = {MediaType.APPLICATION_FORM_URLENCODED})
+    public String stats(
+        @Body Map body,
+        @Body String rawBody, // TODO: make as filter or interceptor
+        @Header("X-Slack-Request-Timestamp") String timestamp,
+        @Header("X-Slack-Signature") String signature
     ) {
-        this.coronaSlackDataService = coronaSlackDataService;
-        this.slackMessageSender = slackMessageSender;
-        this.baseUrl = baseUrl;
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-        this.slackHttpClient = slackHttpClient;
-    }
+        log.debug(rawBody);
 
-    @Post(value = "/stats", consumes = {MediaType.APPLICATION_FORM_URLENCODED, MediaType.APPLICATION_JSON})
-    public String stats(@Body Map body) {
-        log.debug(body.toString());
+        verificationService.verifyRequest(rawBody, timestamp, signature);
 
-        coronaSlackDataService
-            .getActualStatsBlocks(getCountriesFromBody(body))
-            .map(blocks -> slackMessageSender.sendMessage((String) body.get("channel_id"), blocks))
+        slackTokensRepository
+            .getTeamToken((String) body.get("team_id"))
+            .flatMapCompletable(token ->
+                coronaSlackDataService
+                    .getActualStatsBlocks(getCountriesFromBody(body))
+                    .map(blocks -> slackMessageSender.sendMessage((String) body.get("channel_id"), blocks, token))
+                    .ignoreElement()
+            )
             .subscribe();
 
         return "Ok, stats will be send shortly.";
     }
 
-    @Post(value = "/image", consumes = {MediaType.APPLICATION_FORM_URLENCODED, MediaType.APPLICATION_JSON})
-    public String graph(@Body Map body) {
-        log.debug(body.toString());
+    @Post(value = "/image", consumes = {MediaType.APPLICATION_FORM_URLENCODED})
+    public String graph(
+        @Body Map body,
+        @Body String rawBody, // TODO: make as filter or interceptor
+        @Header("X-Slack-Request-Timestamp") String timestamp,
+        @Header("X-Slack-Signature") String signature
+    ) {
+        log.debug(rawBody);
 
-        coronaSlackDataService
-            .getHistoricalStatsBlocks(getCountriesFromBody(body))
-            .map(blocks -> slackMessageSender.sendMessage((String) body.get("channel_id"), blocks))
+        verificationService.verifyRequest(rawBody, timestamp, signature);
+
+        slackTokensRepository
+            .getTeamToken((String) body.get("team_id"))
+            .flatMapCompletable(token ->
+                coronaSlackDataService
+                    .getHistoricalStatsBlocks(getCountriesFromBody(body))
+                    .map(blocks -> slackMessageSender.sendMessage((String) body.get("channel_id"), blocks, token))
+                    .ignoreElement()
+            )
             .subscribe();
 
         return "Ok, chart will be send shortly.";
@@ -80,30 +80,5 @@ public class CoronaCommandsController {
         return Optional.ofNullable(commandText)
             .map(t -> List.of(StringUtils.tokenizeToStringArray(t, ",")))
             .orElse(List.of());
-    }
-
-    @Get(value = "/callback{?code}", produces = MediaType.TEXT_HTML)
-    public Flowable<String> callback(@QueryValue String code) {
-        URI redirectUrl = UriBuilder.of(baseUrl).path("corona/callback").build();
-        var resultUrl = UriBuilder.of("/api/oauth.v2.access")
-            .toString();
-
-        return slackHttpClient
-            .retrieve(HttpRequest.POST(resultUrl, Map.of(
-                "client_id", clientId,
-                "client_secret", clientSecret,
-                "code", code,
-                "redirect_uri", redirectUrl
-            )).contentType(MediaType.APPLICATION_FORM_URLENCODED_TYPE), Map.class)
-            .flatMap(r -> {
-                boolean ok = Boolean.parseBoolean("" + r.get("ok"));
-                if (ok) {
-                    return Flowable.just(r);
-                }
-
-                return Flowable.error(new RuntimeException(r.toString()));
-            })
-            .map(r -> "App installed. You can close this page.")
-            .onErrorReturn(e -> "App installation failed. " + e.getMessage() + ". Try again");
     }
 }

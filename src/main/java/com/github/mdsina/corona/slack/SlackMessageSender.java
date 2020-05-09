@@ -21,10 +21,15 @@ public class SlackMessageSender {
     }
 
     public Single<ChatPostMessageResponse> sendMessage(String channel, List<LayoutBlock> blocks) {
+        return sendMessage(channel, blocks, null);
+    }
+
+    public Single<ChatPostMessageResponse> sendMessage(String channel, List<LayoutBlock> blocks, String token) {
         return Single
             .fromFuture(slackMethodsClient.chatPostMessage(
                 ChatPostMessageRequest.builder()
                     .channel(channel)
+                    .token(token)
                     .blocks(blocks)
                     .build()
             ))

@@ -12,6 +12,15 @@
     <logger name="com.github.mdsina.corona" level="debug" />
     <logger name="com.slack.api" level="debug" />
 
+    <Logger name="org.jooq.tools.LoggerListener" level="error">
+        <AppenderRef ref="STDOUT"/>
+    </Logger>
+
+    <!-- Other jOOQ related debug log output -->
+    <Logger name="org.jooq" level="error">
+        <AppenderRef ref="STDOUT"/>
+    </Logger>
+
     <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
