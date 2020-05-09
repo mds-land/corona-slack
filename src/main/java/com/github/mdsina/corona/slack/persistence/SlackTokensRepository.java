@@ -31,6 +31,7 @@ public class SlackTokensRepository {
         ).ignoreElement();
     }
 
+    @Transactional
     public Maybe<String> getTeamToken(String team) {
         return Maybe.fromFuture(
             ctx.select(field("TOKEN"))
