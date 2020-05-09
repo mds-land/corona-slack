@@ -11,6 +11,7 @@ import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.element.BlockElements;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,7 +105,7 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
             Map yesterdayCountryStat = (Map) yesterdayStat.get("named").get(((String) realCountryName).toLowerCase());
 
             String flagUrl = (String) ((Map) stats.get("countryInfo")).get("flag");
-            LocalDate updated = LocalDate.from(Instant.ofEpochSecond(Long.parseLong(stats.get("updated").toString())));
+            var updated = LocalDateTime.from(Instant.ofEpochSecond(Long.parseLong(stats.get("updated").toString())));
             boolean isNotUpdated = updated.getDayOfMonth() != LocalDate.now().getDayOfMonth();
 
             String todayCases;
