@@ -119,7 +119,7 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
             blocks.put(realCountryName, context(List.of(
                 BlockElements.image(s -> s.imageUrl(flagUrl).altText("Country Flag")),
                 markdownText(String.format(
-                    "*%s*: :pill: *%s* / %s  :skull_and_crossbones: *+%s* (%s)  :yin_yang:  %s / %s",
+                    "*%s*: :pill: *%s* / %s  :skull_and_crossbones: *%s* / %s  :yin_yang:  %s / %s",
                     stats.get("country"),
                     todayCases,
                     yesterdayCountryStat.get("todayCases"),
