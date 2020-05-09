@@ -4,6 +4,7 @@ import com.github.mdsina.corona.corona.CoronaSlackDataService;
 import com.github.mdsina.corona.slack.SlackMessageSender;
 import com.github.mdsina.corona.slack.SlackVerificationService;
 import com.github.mdsina.corona.slack.persistence.SlackTokensRepository;
+import com.github.mdsina.corona.util.BodyUtils;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
@@ -28,21 +29,21 @@ public class CoronaCommandsController {
 
     @Post(value = "/stats", consumes = {MediaType.APPLICATION_FORM_URLENCODED})
     public String stats(
-        @Body Map body,
         @Body String rawBody, // TODO: make as filter or interceptor
         @Header("X-Slack-Request-Timestamp") String timestamp,
         @Header("X-Slack-Signature") String signature
     ) {
         log.debug(rawBody);
+        Map<String, String> body = BodyUtils.parseFormToMap(rawBody);
 
         verificationService.verifyRequest(rawBody, timestamp, signature);
 
         slackTokensRepository
-            .getTeamToken((String) body.get("team_id"))
+            .getTeamToken(body.get("team_id"))
             .flatMapCompletable(token ->
                 coronaSlackDataService
                     .getActualStatsBlocks(getCountriesFromBody(body))
-                    .map(blocks -> slackMessageSender.sendMessage((String) body.get("channel_id"), blocks, token))
+                    .map(blocks -> slackMessageSender.sendMessage(body.get("channel_id"), blocks, token))
                     .ignoreElement()
             )
             .subscribe();
@@ -52,21 +53,21 @@ public class CoronaCommandsController {
 
     @Post(value = "/image", consumes = {MediaType.APPLICATION_FORM_URLENCODED})
     public String graph(
-        @Body Map body,
         @Body String rawBody, // TODO: make as filter or interceptor
         @Header("X-Slack-Request-Timestamp") String timestamp,
         @Header("X-Slack-Signature") String signature
     ) {
         log.debug(rawBody);
+        Map<String, String> body = BodyUtils.parseFormToMap(rawBody);
 
         verificationService.verifyRequest(rawBody, timestamp, signature);
 
         slackTokensRepository
-            .getTeamToken((String) body.get("team_id"))
+            .getTeamToken(body.get("team_id"))
             .flatMapCompletable(token ->
                 coronaSlackDataService
                     .getHistoricalStatsBlocks(getCountriesFromBody(body))
-                    .map(blocks -> slackMessageSender.sendMessage((String) body.get("channel_id"), blocks, token))
+                    .map(blocks -> slackMessageSender.sendMessage(body.get("channel_id"), blocks, token))
                     .ignoreElement()
             )
             .subscribe();
@@ -74,8 +75,8 @@ public class CoronaCommandsController {
         return "Ok, chart will be send shortly.";
     }
 
-    private List<String> getCountriesFromBody(Map body) {
-        String commandText = (String) body.get("text");
+    private List<String> getCountriesFromBody(Map<String, String> body) {
+        String commandText = body.get("text");
 
         return Optional.ofNullable(commandText)
             .map(t -> List.of(StringUtils.tokenizeToStringArray(t, ",")))
