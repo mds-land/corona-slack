@@ -102,15 +102,28 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
             Map yesterdayCountryStat = (Map) yesterdayStat.get("named").get(((String) realCountryName).toLowerCase());
 
             String flagUrl = (String) ((Map) stats.get("countryInfo")).get("flag");
+            Object todayCases = Long.parseLong(stats.get("todayCases").toString());
+            if ((Long) todayCases > 0) {
+                todayCases = "+" + todayCases;
+            } else {
+                todayCases = "-";
+            }
+
+            Object todayDeaths = Long.parseLong(stats.get("todayDeaths").toString());
+            if ((Long) todayDeaths > 0) {
+                todayDeaths = "+" + todayDeaths;
+            } else {
+                todayDeaths = "-";
+            }
 
             blocks.put(realCountryName, context(List.of(
                 BlockElements.image(s -> s.imageUrl(flagUrl).altText("Country Flag")),
                 markdownText(String.format(
-                    "*%s*: :pill: *+%s* (%s)  :skull_and_crossbones: *+%s* (%s)  :yin_yang:  %s / %s",
+                    "*%s*: :pill: *%s* / %s  :skull_and_crossbones: *+%s* (%s)  :yin_yang:  %s / %s",
                     stats.get("country"),
-                    stats.get("todayCases"),
+                    todayCases,
                     yesterdayCountryStat.get("todayCases"),
-                    stats.get("todayDeaths"),
+                    todayDeaths,
                     yesterdayCountryStat.get("todayDeaths"),
                     stats.get("cases"),
                     stats.get("deaths")
