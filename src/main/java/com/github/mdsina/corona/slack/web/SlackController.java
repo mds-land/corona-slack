@@ -60,7 +60,7 @@ public class SlackController {
             })
             .flatMapCompletable(r -> slackTokensRepository.addOrUpdateToken(
                 (String) ((Map) r.get("team")).get("id"),
-                (String) ((Map) r.get("bot")).get("bot_access_token")
+                (String) r.get("access_token")
             ))
             .andThen(Single.just("App installed. You can close this page."))
             .onErrorReturn(e -> "App installation failed. " + e.getMessage() + ". Try again");
