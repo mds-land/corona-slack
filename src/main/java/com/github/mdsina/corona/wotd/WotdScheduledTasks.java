@@ -1,6 +1,6 @@
 package com.github.mdsina.corona.wotd;
 
-import com.github.mdsina.corona.RetryableTaskRunner;
+import com.github.mdsina.corona.scheduling.RetryableTaskRunner;
 import com.github.mdsina.corona.slack.SlackLayoutEntity;
 import com.github.mdsina.corona.slack.SlackMessageSender;
 import io.micronaut.context.annotation.Value;

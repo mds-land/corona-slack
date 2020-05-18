@@ -5,7 +5,16 @@ Requires=docker.service
 
 # /opt/corona-slack/env.list - should contain slack envs:
 # SLACK_CHANNEL - slack channel id to send daily statistics
-# SLACK_TOKEN - slack bot token
+# SLACK_TOKEN - slack bot token, used only for daily statistics
+# CORONA_BASE_URL - external url to your backend, used for authorized installation of workspace token
+# CORONA_CHART_URL - external url to your backend root for images
+# SLACK_SIGNING_SECRET - App signing secret, can be found in App Info page in Slack App Catalog
+# SLACK_CLIENT_ID - App OAuth client id, can be found in App Info page in Slack App Catalog
+# SLACK_CLIENT_SECRET - App OAuth client secret, can be found in App Info page in Slack App Catalog
+# JDBC_USER - User for database access
+# JDBC_PASSWORD - database password
+# JDBC_URL - jdbc connection url
+# JDBC_DRIVER - jdbc connection url
 
 [Service]
 TimeoutStartSec=0
@@ -14,7 +23,7 @@ ExecStartPre=-/usr/bin/docker stop docker.corona-slack.service
 ExecStartPre=-/usr/bin/docker rm docker.corona-slack.service
 ExecStartPre=/usr/bin/docker pull mdsina/corona-slack:latest
 ExecStart=/usr/bin/docker run --rm --name docker.corona-slack.service \
-	--env-file /opt/corona-slack/env.list \
+    --env-file /opt/corona-slack/env.list \
     -p 8082:8080 \
     mdsina/corona-slack:latest
 

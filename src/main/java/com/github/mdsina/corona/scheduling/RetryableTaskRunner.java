@@ -1,4 +1,4 @@
-package com.github.mdsina.corona;
+package com.github.mdsina.corona.scheduling;
 
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.TaskScheduler;

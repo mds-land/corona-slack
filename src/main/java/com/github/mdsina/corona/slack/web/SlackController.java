@@ -11,12 +11,15 @@ import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.http.client.RxHttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.uri.UriBuilder;
+import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.rules.SecurityRule;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import java.net.URI;
 import java.util.Map;
 import javax.annotation.Nullable;
 
+@Secured(SecurityRule.IS_ANONYMOUS)
 @Controller("slack")
 public class SlackController {
 

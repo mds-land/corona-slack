@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Jekyll v3.8.5">
+    <title>COVID-19 Stat Notifier</title>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+
+
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.8/lib/sortable.js"></script>
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+</head>
+<body class="bg-light">
+<div class="container">
+    <div class="py-5 text-center">
+        <img class="d-block mx-auto mb-4" th:src="@{{baseUrl}public/corona_logo.png(baseUrl=${baseUrl})}" alt="" width="72" height="72">
+        <h2>Configure COVID-19 Stat Notifier for team #<span th:text="${teamId}"></span></h2>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 order-md-1">
+
+            <form id="data" method="post" th:action="@{{baseUrl}admin/manage(baseUrl=${baseUrl})}" class="needs-validation" novalidate>
+                <div class="d-inline-block">
+                    <h4 class="mb-3">Daily Summary </h4>
+                </div>
+                <div class="d-inline-block">
+                    <i class="fas fa-long-arrow-alt-right"></i>
+                </div>
+                <div class="d-inline-block">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" th:checked="${config.isDailyEnabled()}" value="true" class="custom-control-input" name="daily_enabled" id="daily-summary-enabled">
+                        <label class="custom-control-label" for="daily-summary-enabled">Enable</label>
+                    </div>
+                </div>
+
+                <hr class="mb-4">
+
+                <div class="mb-3">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="cron-daily">Cron</label>
+                            <input type="text" name="daily_cron" th:value="${config.getDailyCronString()}" class="form-control" id="cron-daily" >
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="daily-channel">Channel ID or Name</label>
+                            <input type="text" name="daily_channel" th:value="${config.getDailyChannel()}" class="form-control" id="daily-channel" >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        Sections
+                    </div>
+                    <div class="card-body">
+                        <p>If empty, will be used default 2 sections. <strong>Duplicates in sections are ignored overall.</strong></p>
+                        <p>The next country formats supported in any symbol case:</p>
+                        <ul>
+                            <li>ISO2/3</li>
+                            <li>fully-qualified</li>
+                        </ul>
+                        <p><strong>Countries must be comma-separated</strong></p>
+                        <p><em>Example: rus, nz, Italy, UsA, CHINA</em></p>
+                        <div id="daily-section-cards">
+                        </div>
+
+                        <button class="btn btn-outline-secondary btn-block" id="add-daily-section" type="button">Add new section</button>
+
+                    </div>
+                </div>
+
+                <hr class="mb-4">
+                <button class="btn btn-primary btn-lg btn-block" type="submit">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="my-5 pt-5 text-muted text-center text-small">
+        <p class="mb-1">&copy; 2020</p>
+    </footer>
+</div>
+<script th:inline="javascript" type="text/javascript">
+    $( document ).ready(function() {
+        let dailySectionsIndex = 1;
+
+        const sortable = new Sortable.default(document.querySelectorAll('#daily-section-cards'), {
+            draggable: 'div[data-draggable="true"]',
+            handle: 'button.drg'
+        });
+
+        function updateIndices() {
+
+            function updateElements(elements) {
+                let newIndex2 = 1;
+                let rememberedIndex2;
+                let updateLater2;
+
+                elements.each(function () {
+                    let updateIndex = newIndex2;
+                    let el = $(this);
+
+                    const parent = $(this).parents("div[data-draggable]:not([class*='mirror'])");
+                    if (!parent.length) {
+                        return;
+                    }
+
+                    if (parent.hasClass("draggable-source--is-dragging")) {
+                        if (updateLater2) {
+                            el = updateLater2;
+                        } else {
+                            rememberedIndex2 = newIndex2;
+                            newIndex2++;
+                            return;
+                        }
+                    }
+
+                    if (parent.hasClass("draggable--original")) {
+                        if (!rememberedIndex2) {
+                            rememberedIndex2 = newIndex2 + 1;
+                            updateLater2 = el;
+                            return;
+                        }
+                        updateIndex = rememberedIndex2;
+                        newIndex2--;
+                    }
+
+                    el.text("Section #" + updateIndex);
+
+                    newIndex2++;
+                });
+            }
+
+            updateElements($("#daily-section-cards>div:visible, #daily-section-cards>div:hidden").find("div.input-group-prepend>span"));
+            updateElements($("#daily-section-cards>div:visible, #daily-section-cards>div:hidden").find("small"));
+        }
+
+        sortable.on('sortable:stop', updateIndices);
+
+        function createDailySection(value) {
+            const id = performance.now();
+            const newRowParent = $(`<div id='${id}' data-draggable="true">`);
+            const newRow = $(`<div class="input-group mb-3">`);
+
+            const prepDiv = $('<div class="input-group-prepend d-none d-md-block">');
+            prepDiv.append($(`<span class="input-group-text">Section #${dailySectionsIndex}</span>`));
+            newRow.append(prepDiv);
+
+            newRow.append($(`<input placeholder="" type="text" class="form-control" value="${value || ''}" name="daily_sections"/>`));
+
+            const btnDiv = $('<div class="input-group-append">');
+            const button = $(`<button class="btn btn-outline-danger" data-id="${id}" type="button">Remove</button>`);
+            button.click(function () {
+                $(`#${$(this).data("id")}`).remove();
+                dailySectionsIndex--;
+
+                updateIndices();
+            })
+            btnDiv.append(button);
+            btnDiv.append($('<button type="button" class="drg btn btn-outline-secondary"><span class="fas fa-arrows-alt"></span></button>'));
+
+            newRow.append(btnDiv);
+            newRowParent.append($(`<small class="form-text text-muted d-md-none d-sm-table-row">Section #${dailySectionsIndex}</small>`));
+            newRowParent.append(newRow);
+            $("#daily-section-cards").append(newRowParent);
+
+            dailySectionsIndex++;
+        }
+
+        $("#add-daily-section").click(function () {
+            createDailySection();
+        });
+
+        const list = /*[[${config.getDailySections()}]]*/ [];
+        for (const a of list) {
+            createDailySection(a);
+        }
+    });
+</script>
+</body>
+</html>

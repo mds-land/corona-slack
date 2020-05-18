@@ -1,6 +1,60 @@
 micronaut:
+  views:
+    thymeleaf:
+      cacheable: false
+      enabled: true
+
+  router:
+    static-resources:
+      default:
+        enabled: true
+        mapping: "/public/**"
+        paths: "classpath:public"
+
   application:
     name: corona-slack
+
+  security:
+    intercept-url-map:
+      - pattern: /favicon.*
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /public/**
+        http-method: GET
+        access:
+          - isAnonymous()
+    endpoints:
+      oauth:
+        enabled: true
+      login:
+        enabled: true
+      logout:
+        enabled: true
+    oauth2:
+
+      clients:
+        slack:
+          client-secret: '${SLACK_CLIENT_SECRET}'
+          client-id: '${SLACK_CLIENT_ID}'
+          authorization:
+            url: 'https://slack.com/oauth/v2/authorize?user_scope=identity.basic,identity.team'
+          token:
+            url: 'https://slack.com/api/oauth.v2.access'
+            auth-method: client_secret_post
+      enabled: true
+      default-provider: slack
+    token:
+      jwt:
+        cookie:
+          enabled: true
+        signatures:
+          secret:
+            generator:
+              secret: '${GENERATOR_SECRET}'
+              jws-algorithm: HS256
+        enabled: true
+    enabled: true
 
 jackson:
   propertyNamingStrategy: SNAKE_CASE
@@ -8,7 +62,7 @@ jackson:
 
 datasources:
   default:
-    url: 'jdbc:h2:file:${H2_DB};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE'
+    url: '${JDBC_URL}'
     username: ${JDBC_USER}
     password: ${JDBC_PASSWORD}
     driverClassName: ${JDBC_DRIVER:org.h2.Driver}
@@ -23,5 +77,5 @@ flyway:
 jooq:
   datasources:
     default:
-      sql-dialect: 'H2'
+      sql-dialect: ${JOOQ_DIALECT:H2}
 

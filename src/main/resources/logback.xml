@@ -12,6 +12,9 @@
     <logger name="com.github.mdsina.corona" level="debug" />
     <logger name="com.slack.api" level="debug" />
     <logger name="io.micronaut.http" level="trace" />
+    <logger name="io.micronaut.context.condition" level="trace" />
+    <logger name="io.micronaut.security" level="trace" />
+    <logger name="io.micronaut.security" level="trace" />
 
     <Logger name="org.jooq.tools.LoggerListener" level="error">
         <AppenderRef ref="STDOUT"/>

@@ -4,7 +4,10 @@ import com.github.mdsina.corona.corona.chart.CoronaChartLayoutBuilder;
 import com.github.mdsina.corona.slack.SlackLayoutApplier;
 import com.github.mdsina.corona.slack.SlackLayoutEntity;
 import com.slack.api.model.block.LayoutBlock;
+import io.micronaut.core.util.StringUtils;
 import io.reactivex.Single;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,7 +32,18 @@ public class CoronaSlackDataService {
         this.dataProvider = dataProvider;
     }
 
+    public Single<List<LayoutBlock>> getSectionedActualStatsBlocks(List<String> sections) {
+        return getActualStatsBlocksInternal(getProcessedSections(sections));
+    }
+
     public Single<List<LayoutBlock>> getActualStatsBlocks(List<String> countries) {
+        return getActualStatsBlocksInternal(getCountries(countries));
+    }
+
+    private Single<List<LayoutBlock>> getActualStatsBlocksInternal(List<List<String>> sections) {
+        if (sections.isEmpty()) {
+            return Single.just(List.of());
+        }
         return dataProvider.get2DaysData()
             .flatMap(daysData -> layoutApplier.getBlocksFromEntity(
                 SlackLayoutEntity.builder()
@@ -37,18 +51,9 @@ public class CoronaSlackDataService {
                     .layoutData(Map.of(
                         "todayStat", daysData.get("todayStat"),
                         "yesterdayStat", daysData.get("yesterdayStat"),
-                        "countries", getCountries(countries)
+                        "countries", sections
                     ))
                     .build()
-            ));
-    }
-
-    public Single<Map<String, Object>> getActualStatsResponse(List<String> countries, Object channelId) {
-        return getActualStatsBlocks(countries)
-            .map(blocks -> Map.of(
-                "blocks", blocks,
-                "response_type", "in_channel",
-                "channel", channelId
             ));
     }
 
@@ -66,18 +71,37 @@ public class CoronaSlackDataService {
             ));
     }
 
-    public Single<Map<String, Object>> getHistoricalStatsResponse(List<String> countries, Object channelId) {
-        return getHistoricalStatsBlocks(countries)
-            .map(blocks -> Map.of(
-                "blocks", blocks,
-                "response_type", "in_channel",
-                "channel", channelId
-            ));
-    }
-
     private List<List<String>> getCountries(List<String> countries) {
         return countries == null || countries.isEmpty()
             ? List.of(MAIN_COUNTRIES, TOP_COUNTRIES)
             : List.of(countries);
+    }
+
+    private List<List<String>> getProcessedSections(List<String> rawSections) {
+        // TODO: do that more efficient
+        List<List<String>> tokenizedSections = new ArrayList<>();
+
+        HashSet<String> tokens = new HashSet<>();
+
+        for (String section : rawSections) {
+            String[] tokenizedSection = StringUtils.tokenizeToStringArray(section, ",");
+            if (tokenizedSection.length == 0) {
+                continue;
+            }
+
+            var res = new ArrayList<String>();
+
+            for (String token : tokenizedSection) {
+                String lcToken = token.toLowerCase();
+                if (!tokens.contains(lcToken)) {
+                    tokens.add(lcToken);
+                    res.add(lcToken);
+                }
+            }
+
+            tokenizedSections.add(res);
+        }
+
+        return tokenizedSections;
     }
 }

@@ -12,6 +12,7 @@ WORKDIR /home/app/corona-slack
 #FROM frolvlad/alpine-glibc
 #RUN apk update && apk add libstdc++
 RUN mkdir -p /app/data
+RUN mkdir -p /app/db
 RUN ls /home/app/corona-slack
 EXPOSE 8080
 RUN cp /home/app/corona-slack/target/corona-slack-*.jar /app/corona-slack
