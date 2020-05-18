@@ -70,7 +70,7 @@ public class TeamConfigRepository {
     }
 
     @ReadOnly
-    @Transactional
+    @Transactional(TxType.REQUIRES_NEW)
     public Maybe<TeamConfig> getConfig(String team) {
         return getConfig(field("t.TEAM_ID").eq(team)).flatMapMaybe(r -> {
             if (r.isEmpty()) {
@@ -82,7 +82,7 @@ public class TeamConfigRepository {
     }
 
     @ReadOnly
-    @Transactional
+    @Transactional(TxType.REQUIRES_NEW)
     public Single<List<TeamConfig>> getEnabledConfigs() {
         return getConfig(field("tc.ENABLED").isTrue());
     }
