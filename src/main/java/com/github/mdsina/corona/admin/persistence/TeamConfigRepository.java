@@ -8,15 +8,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.mdsina.corona.admin.ConfigParameters;
 import com.github.mdsina.corona.admin.TeamConfig;
 import com.github.mdsina.corona.admin.TeamConfig.TeamConfigBuilder;
-import io.micronaut.transaction.annotation.ReadOnly;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
-import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.jooq.Condition;
@@ -30,8 +27,6 @@ public class TeamConfigRepository {
     private final DSLContext ctx;
     private final ObjectMapper objectMapper;
 
-    @ReadOnly
-    @Transactional(TxType.REQUIRES_NEW)
     public Single<List<TeamConfig>> getConfig(Condition... conditions) {
         return Single.fromFuture(
             ctx
@@ -69,8 +64,6 @@ public class TeamConfigRepository {
         ));
     }
 
-    @ReadOnly
-    @Transactional(TxType.REQUIRES_NEW)
     public Maybe<TeamConfig> getConfig(String team) {
         return getConfig(field("t.TEAM_ID").eq(team)).flatMapMaybe(r -> {
             if (r.isEmpty()) {
@@ -81,14 +74,11 @@ public class TeamConfigRepository {
         });
     }
 
-    @ReadOnly
-    @Transactional(TxType.REQUIRES_NEW)
     public Single<List<TeamConfig>> getEnabledConfigs() {
         return getConfig(field("tc.ENABLED").isTrue());
     }
 
     @SneakyThrows
-    @Transactional
     public Completable addOrUpdateConfig(String team, ConfigParameters request) {
         String config = objectMapper.writeValueAsString(request);
         return Single.fromFuture(
