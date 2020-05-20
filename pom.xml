@@ -112,12 +112,9 @@
             <artifactId>micronaut-flyway</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.micronaut.data</groupId>
-            <artifactId>micronaut-data-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.micronaut.configuration</groupId>
-            <artifactId>micronaut-jooq</artifactId>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>3.13.2</version>
         </dependency>
 
         <dependency>
@@ -127,13 +124,6 @@
         <dependency>
             <groupId>io.micronaut</groupId>
             <artifactId>micronaut-security-jwt</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.2.4</version>
-            <scope>runtime</scope>
         </dependency>
 
         <dependency>
