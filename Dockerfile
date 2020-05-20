@@ -15,6 +15,6 @@ RUN mkdir -p /app/data
 RUN mkdir -p /app/db
 RUN ls /home/app/corona-slack
 EXPOSE 8080
-RUN cp /home/app/corona-slack/target/original-corona-slack-*.jar /app/corona-slack
+RUN cp /home/app/corona-slack/target/corona-slack-*.jar /app/corona-slack
 #COPY --from=graalvm /home/app/corona-slack/corona-slack /app/corona-slack
 ENTRYPOINT ["java", "-Xmx200M", "-jar", "/app/corona-slack"]
