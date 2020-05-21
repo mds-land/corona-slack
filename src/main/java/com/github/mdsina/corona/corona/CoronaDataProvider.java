@@ -1,14 +1,13 @@
 package com.github.mdsina.corona.corona;
 
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @SuppressWarnings("unchecked")
 @RequiredArgsConstructor
@@ -17,46 +16,39 @@ public class CoronaDataProvider {
 
     private final CoronaStatsClient coronaStatsClient;
 
-    public Single<Map<String, Map<String, Map>>> get2DaysData() {
-        return Observable.zip(
+    public Mono<Map<String, Map<String, Map>>> get2DaysData() {
+        return Mono.zip(
             coronaStatsClient.getAllCountriesStat()
-                .subscribeOn(Schedulers.newThread())
-                .toObservable(),
+                .subscribeOn(Schedulers.elastic()),
             coronaStatsClient.getWorldStat()
-                .subscribeOn(Schedulers.newThread())
-                .toObservable(),
+                .subscribeOn(Schedulers.elastic()),
             coronaStatsClient.getAllCountriesStat(true)
-                .subscribeOn(Schedulers.newThread())
-                .toObservable(),
+                .subscribeOn(Schedulers.elastic()),
             coronaStatsClient.getWorldStat(true)
-                .toObservable()
-                .subscribeOn(Schedulers.newThread()),
-            (t1, t2, t3, t4) -> Map.of(
-                "todayStat", processStat(t1, t2),
-                "yesterdayStat",  processStat(t3, t4)
-            )
-        ).singleOrError();
+                .subscribeOn(Schedulers.elastic())
+        ).map(t -> Map.of(
+            "todayStat", processStat(t.getT1(), t.getT2()),
+            "yesterdayStat",  processStat(t.getT3(), t.getT4())
+        ));
     }
 
-    public Single<Map<String, Map<String, Map<String, Map<String, Integer>>>>> getHistoricalAllData(
+    public Mono<Map<String, Map<String, Map<String, Map<String, Integer>>>>> getHistoricalAllData(
         List<String> countries
     ) {
-        return Observable.zip(
+        return Mono.zip(
             coronaStatsClient.getHistoricalStatForCountries(countries)
-                .subscribeOn(Schedulers.newThread())
-                .toObservable(),
+                .subscribeOn(Schedulers.elastic()),
             coronaStatsClient.getHistoricalWorldStat()
-                .subscribeOn(Schedulers.newThread())
-                .toObservable(),
+                .subscribeOn(Schedulers.elastic()),
             coronaStatsClient.getAllCountriesStat()
-                .subscribeOn(Schedulers.newThread())
-                .toObservable(),
-            (t1, t2, t3) -> Map.of("t1", t1, "t2", t2, "t3", t3)
-        ).flatMap(o -> Single.fromCallable(() -> processHistoricalStat(
-            (List<Map<String, ?>>) o.get("t1"),
-            (Map<String, Map<String, Integer>>) o.get("t2"),
-            (List<Map>) o.get("t3")
-        )).subscribeOn(Schedulers.newThread()).toObservable()).singleOrError();
+                .subscribeOn(Schedulers.elastic())
+        )
+            .map(t -> Map.of("t1", t.getT1(), "t2", t.getT2(), "t3", t.getT3()))
+            .flatMap(o -> Mono.fromCallable(() -> processHistoricalStat(
+                (List<Map<String, ?>>) o.get("t1"),
+                (Map<String, Map<String, Integer>>) o.get("t2"),
+                (List<Map>) o.get("t3")
+            )).subscribeOn(Schedulers.elastic()));
     }
 
     private Map<String, Map<String, Map<String, Map<String, Integer>>>> processHistoricalStat(

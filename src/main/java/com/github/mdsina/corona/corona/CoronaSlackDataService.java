@@ -5,7 +5,6 @@ import com.github.mdsina.corona.slack.SlackLayoutApplier;
 import com.github.mdsina.corona.slack.SlackLayoutEntity;
 import com.slack.api.model.block.LayoutBlock;
 import io.micronaut.core.util.StringUtils;
-import io.reactivex.Single;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @Singleton
@@ -32,17 +32,17 @@ public class CoronaSlackDataService {
         this.dataProvider = dataProvider;
     }
 
-    public Single<List<LayoutBlock>> getSectionedActualStatsBlocks(List<String> sections) {
+    public Mono<List<LayoutBlock>> getSectionedActualStatsBlocks(List<String> sections) {
         return getActualStatsBlocksInternal(getProcessedSections(sections));
     }
 
-    public Single<List<LayoutBlock>> getActualStatsBlocks(List<String> countries) {
+    public Mono<List<LayoutBlock>> getActualStatsBlocks(List<String> countries) {
         return getActualStatsBlocksInternal(getCountries(countries));
     }
 
-    private Single<List<LayoutBlock>> getActualStatsBlocksInternal(List<List<String>> sections) {
+    private Mono<List<LayoutBlock>> getActualStatsBlocksInternal(List<List<String>> sections) {
         if (sections.isEmpty()) {
-            return Single.just(List.of());
+            return Mono.just(List.of());
         }
         return dataProvider.get2DaysData()
             .flatMap(daysData -> layoutApplier.getBlocksFromEntity(
@@ -57,7 +57,7 @@ public class CoronaSlackDataService {
             ));
     }
 
-    public Single<List<LayoutBlock>> getHistoricalStatsBlocks(List<String> countries) {
+    public Mono<List<LayoutBlock>> getHistoricalStatsBlocks(List<String> countries) {
         List<List<String>> cList = getCountries(countries);
         return dataProvider.getHistoricalAllData(cList.stream().flatMap(List::stream).collect(Collectors.toList()))
             .flatMap(daysData -> layoutApplier.getBlocksFromEntity(

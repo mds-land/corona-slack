@@ -8,9 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.mdsina.corona.admin.ConfigParameters;
 import com.github.mdsina.corona.admin.TeamConfig;
 import com.github.mdsina.corona.admin.TeamConfig.TeamConfigBuilder;
-import io.reactivex.Completable;
-import io.reactivex.Maybe;
-import io.reactivex.Single;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
@@ -18,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import reactor.core.publisher.Mono;
 
 // TODO: maybe some jpa?
 @RequiredArgsConstructor
@@ -27,8 +25,8 @@ public class TeamConfigRepository {
     private final DSLContext ctx;
     private final ObjectMapper objectMapper;
 
-    public Single<List<TeamConfig>> getConfig(Condition... conditions) {
-        return Single.fromFuture(
+    public Mono<List<TeamConfig>> getConfig(Condition... conditions) {
+        return Mono.fromCompletionStage(
             ctx
                 .select(
                     field("t.TEAM_ID", String.class),
@@ -40,8 +38,7 @@ public class TeamConfigRepository {
                 .leftJoin(table("TEAM_CONFIG tc")).on(field("t.TEAM_ID").eq(field("tc.TEAM_ID")))
                 .where(conditions)
                 .fetchAsync()
-                .toCompletableFuture()
-        ).flatMap(r -> Single.just(
+        ).map(r ->
             r.stream()
                 .map(rec -> {
                     try {
@@ -61,27 +58,27 @@ public class TeamConfigRepository {
                     }
                 })
                 .collect(Collectors.toList())
-        ));
+        );
     }
 
-    public Maybe<TeamConfig> getConfig(String team) {
-        return getConfig(field("t.TEAM_ID").eq(team)).flatMapMaybe(r -> {
+    public Mono<TeamConfig> getConfig(String team) {
+        return getConfig(field("t.TEAM_ID").eq(team)).flatMap(r -> {
             if (r.isEmpty()) {
-                return Maybe.empty();
+                return Mono.empty();
             }
 
-            return Maybe.just(r.get(0));
+            return Mono.just(r.get(0));
         });
     }
 
-    public Single<List<TeamConfig>> getEnabledConfigs() {
+    public Mono<List<TeamConfig>> getEnabledConfigs() {
         return getConfig(field("tc.ENABLED").isTrue());
     }
 
     @SneakyThrows
-    public Completable addOrUpdateConfig(String team, ConfigParameters request) {
+    public Mono<Void> addOrUpdateConfig(String team, ConfigParameters request) {
         String config = objectMapper.writeValueAsString(request);
-        return Single.fromFuture(
+        return Mono.fromCompletionStage(
             ctx.insertInto(table("TEAM_CONFIG"), field("TEAM_ID"), field("CONFIG"), field("ENABLED"))
                 .values(team, config, request.isDailyEnabled())
                 .onConflict(field("TEAM_ID"))
@@ -89,7 +86,6 @@ public class TeamConfigRepository {
                 .set(field("CONFIG"), config)
                 .set(field("ENABLED"), request.isDailyEnabled())
                 .executeAsync()
-                .toCompletableFuture()
-        ).ignoreElement();
+        ).then();
     }
 }

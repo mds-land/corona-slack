@@ -3,12 +3,12 @@ package com.github.mdsina.corona.slack;
 import static java.util.Objects.requireNonNull;
 
 import com.slack.api.model.block.LayoutBlock;
-import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Singleton
 public class SlackLayoutApplier {
@@ -19,10 +19,10 @@ public class SlackLayoutApplier {
         this.layoutBuilders = builders.stream().collect(Collectors.toMap(SlackLayoutBuilder::getType, o -> o));
     }
 
-    public Single<List<LayoutBlock>> getBlocksFromEntity(SlackLayoutEntity entity) {
+    public Mono<List<LayoutBlock>> getBlocksFromEntity(SlackLayoutEntity entity) {
         SlackLayoutBuilder layoutBuilder = requireNonNull(layoutBuilders.get(entity.getLayoutBuilderType()));
 
-        return Single.fromCallable(() -> layoutBuilder.buildBlocks(entity.getLayoutData()))
-            .subscribeOn(Schedulers.newThread());
+        return Mono.fromCallable(() -> layoutBuilder.buildBlocks(entity.getLayoutData()))
+            .subscribeOn(Schedulers.elastic());
     }
 }

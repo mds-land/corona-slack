@@ -7,7 +7,6 @@ import com.github.mdsina.corona.slack.SlackMessageSender;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.TaskScheduler;
 import io.micronaut.scheduling.annotation.Scheduled;
-import io.reactivex.schedulers.Schedulers;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +14,7 @@ import java.util.concurrent.ScheduledFuture;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.scheduler.Schedulers;
 
 @Slf4j
 @Singleton
@@ -68,9 +68,9 @@ public class StoredTaskScheduler {
     private void sendStatTask(String channel, String token, List<String> sections) {
         coronaSlackDataService.getSectionedActualStatsBlocks(sections)
             .filter(s -> !s.isEmpty())
-            .flatMapSingle(blocks -> slackMessageSender.sendMessage(channel, blocks, token))
+            .flatMap(blocks -> slackMessageSender.sendMessage(channel, blocks, token))
             .doOnError(e -> log.error("Error occurred on running task", e))
-            .subscribeOn(Schedulers.newThread())
+            .subscribeOn(Schedulers.elastic())
             .subscribe();
     }
 }

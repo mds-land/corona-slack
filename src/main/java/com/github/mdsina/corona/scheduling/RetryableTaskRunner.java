@@ -2,7 +2,6 @@ package com.github.mdsina.corona.scheduling;
 
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.TaskScheduler;
-import io.reactivex.Observable;
 import java.time.Duration;
 import javax.inject.Named;
 import javax.inject.Singleton;

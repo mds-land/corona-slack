@@ -4,10 +4,10 @@ import com.slack.api.methods.AsyncMethodsClient;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.model.block.LayoutBlock;
-import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import java.util.List;
 import javax.inject.Singleton;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Singleton
 public class SlackMessageSender {
@@ -20,29 +20,29 @@ public class SlackMessageSender {
         this.slackMethodsClient = slackMethodsClient;
     }
 
-    public Single<ChatPostMessageResponse> sendMessage(String channel, List<LayoutBlock> blocks) {
+    public Mono<ChatPostMessageResponse> sendMessage(String channel, List<LayoutBlock> blocks) {
         return sendMessage(channel, blocks, null);
     }
 
-    public Single<ChatPostMessageResponse> sendMessage(String channel, List<LayoutBlock> blocks, String token) {
-        return Single
-            .fromFuture(slackMethodsClient.chatPostMessage(
+    public Mono<ChatPostMessageResponse> sendMessage(String channel, List<LayoutBlock> blocks, String token) {
+        return Mono
+            .fromCompletionStage(slackMethodsClient.chatPostMessage(
                 ChatPostMessageRequest.builder()
                     .channel(channel)
                     .token(token)
                     .blocks(blocks)
                     .build()
             ))
-            .subscribeOn(Schedulers.newThread())
+            .subscribeOn(Schedulers.elastic())
             .flatMap(res -> {
                 if (res.getError() != null) {
-                    return Single.error(new RuntimeException(res.toString()));
+                    return Mono.error(new RuntimeException(res.toString()));
                 }
-                return Single.just(res);
+                return Mono.just(res);
             });
     }
 
-    public Single<ChatPostMessageResponse> sendMessage(String channel, SlackLayoutEntity layoutEntity) {
+    public Mono<ChatPostMessageResponse> sendMessage(String channel, SlackLayoutEntity layoutEntity) {
         return layoutApplier.getBlocksFromEntity(layoutEntity)
             .flatMap(b -> sendMessage(channel, b));
     }

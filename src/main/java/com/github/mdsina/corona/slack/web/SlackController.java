@@ -8,16 +8,16 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.RxHttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
 import java.net.URI;
 import java.util.Map;
 import javax.annotation.Nullable;
+import reactor.core.publisher.Mono;
 
 @Secured(SecurityRule.IS_ANONYMOUS)
 @Controller("slack")
@@ -25,7 +25,7 @@ public class SlackController {
 
     private final String baseUrl;
     private final SlackProperties slackProperties;
-    private final RxHttpClient slackHttpClient;
+    private final HttpClient slackHttpClient;
     private final SlackTokensRepository slackTokensRepository;
 
     public SlackController(
@@ -41,31 +41,31 @@ public class SlackController {
     }
 
     @Get(value = "/install{?code}", produces = MediaType.TEXT_HTML)
-    public Single<String> callback(@QueryValue @Nullable String code) {
+    public Mono<String> callback(@QueryValue @Nullable String code) {
         URI redirectUrl = UriBuilder.of(baseUrl).path("slack/install").build();
         var resultUrl = UriBuilder.of("/api/oauth.v2.access")
             .toString();
 
-        return slackHttpClient
+        return Mono.from(slackHttpClient
             .retrieve(HttpRequest.POST(resultUrl, Map.of(
                 "client_id", slackProperties.getClientId(),
                 "client_secret", slackProperties.getClientSecret(),
                 "code", code,
                 "redirect_uri", redirectUrl
-            )).contentType(MediaType.APPLICATION_FORM_URLENCODED_TYPE), Map.class)
+            )).contentType(MediaType.APPLICATION_FORM_URLENCODED_TYPE), Map.class))
             .flatMap(r -> {
                 boolean ok = Boolean.parseBoolean("" + r.get("ok"));
                 if (ok) {
-                    return Flowable.just(r);
+                    return Mono.just(r);
                 }
 
-                return Flowable.error(new RuntimeException(r.toString()));
+                return Mono.error(new RuntimeException(r.toString()));
             })
-            .flatMapCompletable(r -> slackTokensRepository.addOrUpdateToken(
+            .flatMap(r -> slackTokensRepository.addOrUpdateToken(
                 (String) ((Map) r.get("team")).get("id"),
                 (String) r.get("access_token")
             ))
-            .andThen(Single.just("App installed. You can close this page."))
-            .onErrorReturn(e -> "App installation failed. " + e.getMessage() + ". Try again");
+            .then(Mono.just("App installed. You can close this page."))
+            .onErrorResume(e -> Mono.just("App installation failed. " + e.getMessage() + ". Try again"));
     }
 }

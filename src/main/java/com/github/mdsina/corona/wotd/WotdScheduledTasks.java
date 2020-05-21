@@ -5,10 +5,10 @@ import com.github.mdsina.corona.slack.SlackLayoutEntity;
 import com.github.mdsina.corona.slack.SlackMessageSender;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.scheduling.annotation.Scheduled;
-import io.reactivex.schedulers.Schedulers;
 import java.util.Map;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.scheduler.Schedulers;
 
 @Slf4j
 @Singleton
@@ -44,7 +44,7 @@ public class WotdScheduledTasks {
                     .layoutData(Map.of("wotd", wotdParser.getAndParse()))
                     .build()
             )
-            .subscribeOn(Schedulers.newThread())
+            .subscribeOn(Schedulers.elastic())
             .doOnError(e -> {
                 log.error("Error occurred on running task. Task will be rescheduled.", e);
                 retryableTaskRunner.run(this::sendWotd);

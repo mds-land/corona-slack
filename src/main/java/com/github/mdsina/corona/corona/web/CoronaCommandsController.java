@@ -43,11 +43,11 @@ public class CoronaCommandsController {
 
         slackTokensRepository
             .getTeamToken(body.get("team_id"))
-            .flatMapCompletable(token ->
+            .flatMap(token ->
                 coronaSlackDataService
                     .getActualStatsBlocks(getCountriesFromBody(body))
                     .map(blocks -> slackMessageSender.sendMessage(body.get("channel_id"), blocks, token))
-                    .ignoreElement()
+                    .then()
             )
             .subscribe();
 
@@ -67,11 +67,11 @@ public class CoronaCommandsController {
 
         slackTokensRepository
             .getTeamToken(body.get("team_id"))
-            .flatMapCompletable(token ->
+            .flatMap(token ->
                 coronaSlackDataService
                     .getHistoricalStatsBlocks(getCountriesFromBody(body))
                     .map(blocks -> slackMessageSender.sendMessage(body.get("channel_id"), blocks, token))
-                    .ignoreElement()
+                    .then()
             )
             .subscribe();
 
