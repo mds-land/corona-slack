@@ -1,5 +1,7 @@
 package com.github.mdsina.corona.corona.web;
 
+import com.github.mdsina.corona.admin.ConfigParameters;
+import com.github.mdsina.corona.admin.persistence.TeamConfigRepository;
 import com.github.mdsina.corona.corona.CoronaSlackDataService;
 import com.github.mdsina.corona.slack.SlackMessageSender;
 import com.github.mdsina.corona.slack.SlackVerificationService;
@@ -29,6 +31,7 @@ public class CoronaCommandsController {
     private final SlackMessageSender slackMessageSender;
     private final SlackVerificationService verificationService;
     private final SlackTokensRepository slackTokensRepository;
+    private final TeamConfigRepository teamConfigRepository;
 
     @Post(value = "/stats", consumes = {MediaType.APPLICATION_FORM_URLENCODED})
     public String stats(
@@ -41,12 +44,12 @@ public class CoronaCommandsController {
 
         verificationService.verifyRequest(rawBody, timestamp, signature);
 
-        slackTokensRepository
-            .getTeamToken(body.get("team_id"))
-            .flatMap(token ->
+        teamConfigRepository
+            .getConfig(body.get("team_id"))
+            .flatMap(teamConfig ->
                 coronaSlackDataService
-                    .getActualStatsBlocks(getCountriesFromBody(body))
-                    .map(blocks -> slackMessageSender.sendMessage(body.get("channel_id"), blocks, token))
+                    .getSectionedActualStatsBlocks(processCountries(teamConfig.getConfig(), body))
+                    .map(blocks -> slackMessageSender.sendMessage(body.get("channel_id"), blocks, teamConfig.getToken()))
                     .then()
             )
             .subscribe();
@@ -76,6 +79,15 @@ public class CoronaCommandsController {
             .subscribe();
 
         return "Ok, chart will be send shortly.";
+    }
+
+    private List<String> processCountries(ConfigParameters parameters, Map<String, String> body) {
+        List<String> requestCountries = getCountriesFromBody(body);
+        if (requestCountries.isEmpty() && parameters != null && !parameters.getDailySections().isEmpty()) {
+            return parameters.getDailySections();
+        }
+        return List.of(String.join(",", requestCountries));
+        // tokenizing remove commas and extra spaces. TODO better
     }
 
     private List<String> getCountriesFromBody(Map<String, String> body) {
