@@ -5,6 +5,7 @@ import com.github.mdsina.corona.slack.SlackLayoutEntity;
 import com.github.mdsina.corona.slack.SlackMessageSender;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.scheduling.annotation.Scheduled;
+import java.util.List;
 import java.util.Map;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,7 @@ public class WotdScheduledTasks {
 
     private final RetryableTaskRunner retryableTaskRunner;
     private final SlackMessageSender slackMessageSender;
-    private final WotdParser wotdParser;
+    private final List<WotdParser> wotdParsers;
 
     @Value("${slack.channel:}")
     private final String channel;
@@ -24,19 +25,19 @@ public class WotdScheduledTasks {
     public WotdScheduledTasks(
         RetryableTaskRunner retryableTaskRunner,
         SlackMessageSender slackMessageSender,
-        WotdParser wotdParser,
+        List<WotdParser> wotdParsers,
         @Value("${slack.channel:}") String channel
     ) {
         this.retryableTaskRunner = retryableTaskRunner;
         this.slackMessageSender = slackMessageSender;
-        this.wotdParser = wotdParser;
+        this.wotdParsers = wotdParsers;
         this.channel = channel;
     }
 
     @Scheduled(cron = "0 15 10 1/1 * ?")
 //    @Scheduled(fixedDelay = "20s")
     void sendWotd() {
-        slackMessageSender
+        wotdParsers.forEach(wotdParser -> slackMessageSender
             .sendMessage(
                 channel,
                 SlackLayoutEntity.builder()
@@ -49,6 +50,7 @@ public class WotdScheduledTasks {
                 log.error("Error occurred on running task. Task will be rescheduled.", e);
                 retryableTaskRunner.run(this::sendWotd);
             })
-            .subscribe();
+            .subscribe()
+        );
     }
 }

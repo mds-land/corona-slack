@@ -22,7 +22,10 @@ public class WotdSlackLayoutBuilder implements SlackLayoutBuilder {
         Wotd wotd = (Wotd) Objects.requireNonNull(data.get("wotd"));
 
         return List.of(
-            section(s -> s.text(markdownText(":symbols: Слово дня по версии Urban Dictionary:"))),
+            section(s -> s.text(markdownText(String.format(
+                ":symbols: Слово дня по версии %s:",
+                wotd.getDictionary()
+            )))),
             section(s -> s.text(markdownText(String.format(
                 "*<%s|%s>* --> %s\n",
                 wotd.getWotdLink(), wotd.getWotd(), wotd.getMeaning()
