@@ -55,7 +55,9 @@ micronaut:
               jws-algorithm: HS256
         enabled: true
     enabled: true
-
+    authentication: cookie
+    redirect:
+      prior-to-login: true
 jackson:
   propertyNamingStrategy: SNAKE_CASE
 
