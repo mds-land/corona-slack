@@ -20,7 +20,7 @@ public class DiscordController {
 
     private final DiscordSignatureVerifier signatureVerifier;
 
-    @Post(consumes = {MediaType.APPLICATION_FORM_URLENCODED})
+    @Post(consumes = {MediaType.APPLICATION_JSON})
     public HttpResponse interactions(
         @Body String rawBody, // TODO: make as filter or interceptor
         @Header("X-Signature-Timestamp") String timestamp,
