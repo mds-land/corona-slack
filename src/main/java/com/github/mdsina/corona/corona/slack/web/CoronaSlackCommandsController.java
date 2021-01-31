@@ -1,4 +1,4 @@
-package com.github.mdsina.corona.corona.web;
+package com.github.mdsina.corona.corona.slack.web;
 
 import com.github.mdsina.corona.admin.ConfigParameters;
 import com.github.mdsina.corona.admin.persistence.TeamConfigRepository;
@@ -24,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 @Secured(SecurityRule.IS_ANONYMOUS)
-@Controller("/corona")
-public class CoronaCommandsController {
+@Controller("/slack/corona")
+public class CoronaSlackCommandsController {
 
     private final CoronaSlackDataService coronaSlackDataService;
     private final SlackMessageSender slackMessageSender;

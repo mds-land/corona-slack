@@ -1,6 +1,7 @@
 package com.github.mdsina.corona.corona;
 
 import com.github.mdsina.corona.corona.chart.CoronaChartLayoutBuilder;
+import com.github.mdsina.corona.corona.slack.CoronaSlackLayoutBuilder;
 import com.github.mdsina.corona.slack.SlackLayoutApplier;
 import com.github.mdsina.corona.slack.SlackLayoutEntity;
 import com.slack.api.model.block.LayoutBlock;
@@ -22,11 +23,11 @@ public class CoronaSlackDataService {
     private static final List<String> TOP_COUNTRIES = List.of("world", "usa", "spain", "italy");
 
     private final SlackLayoutApplier layoutApplier;
-    private final CoronaDataProvider dataProvider;
+    private final CoronaStatsDataProvider dataProvider;
 
     public CoronaSlackDataService(
         SlackLayoutApplier layoutApplier,
-        CoronaDataProvider dataProvider
+        CoronaStatsDataProvider dataProvider
     ) {
         this.layoutApplier = layoutApplier;
         this.dataProvider = dataProvider;

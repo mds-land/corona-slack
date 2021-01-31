@@ -28,7 +28,7 @@ jobs:
     - name: Set up GraalVM
       uses: DeLaGuardo/setup-graalvm@master
       with:
-        graalvm-version: '20.3.0.java11'
+        graalvm-version: '21.0.0.java11'
     - name: Setup Maven
       uses: stCarolas/setup-maven@v4
       with:

@@ -12,7 +12,7 @@ import reactor.core.scheduler.Schedulers;
 @SuppressWarnings("unchecked")
 @RequiredArgsConstructor
 @Singleton
-public class CoronaDataProvider {
+public class CoronaStatsDataProvider {
 
     private final CoronaStatsClient coronaStatsClient;
 
@@ -112,6 +112,9 @@ public class CoronaDataProvider {
             Map info = (Map) stat.get("countryInfo");
             Object iso2 = info.get("iso2");
             Object iso3 = info.get("iso3");
+
+            stat.put("iso2", iso2);
+            stat.put("iso3", iso3);
 
             if (iso2 != null) {
                 iso2Map.put(((String) iso2).toLowerCase(), stat);

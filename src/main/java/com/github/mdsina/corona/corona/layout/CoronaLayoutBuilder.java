@@ -1,14 +1,8 @@
-package com.github.mdsina.corona.corona;
+package com.github.mdsina.corona.corona.layout;
 
-import static com.slack.api.model.block.Blocks.context;
-import static com.slack.api.model.block.Blocks.divider;
-import static com.slack.api.model.block.Blocks.section;
-import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
 import static java.util.Objects.requireNonNull;
 
-import com.github.mdsina.corona.slack.SlackLayoutBuilder;
-import com.slack.api.model.block.LayoutBlock;
-import com.slack.api.model.block.element.BlockElements;
+import com.github.mdsina.corona.corona.layout.CoronaLayoutTemplater.CoronaTemplateData;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -18,13 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import javax.inject.Singleton;
 
-@SuppressWarnings("unchecked")
-@Singleton
-public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
-
-    public static final String TYPE = "corona";
+public class CoronaLayoutBuilder<T> {
 
     private static final List<String> FUNNY_TPLS = List.of(
         "%s is no more...",
@@ -36,8 +25,17 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
         "Say hello to my little %s"
     );
 
-    @Override
-    public List<LayoutBlock> buildBlocks(Map<?, ?> data) {
+    private final CoronaLayoutTemplater<T> templater;
+
+    private CoronaLayoutBuilder(CoronaLayoutTemplater<T> templater) {
+        this.templater = templater;
+    }
+
+    public static <G> CoronaLayoutBuilder<G> withTemplater(CoronaLayoutTemplater<G> templater) {
+        return new CoronaLayoutBuilder<>(templater);
+    }
+
+    public List<T> buildLayout(Map<?, ?> data) {
         var todayStat = (Map<String, Map>) requireNonNull(
             data.get("todayStat"),
             "todayStat is required"
@@ -48,34 +46,32 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
         );
         var countries = (List<List<String>>) data.get("countries");
 
-        List<LayoutBlock> blocks = new ArrayList<>();
+        List<T> blocks = new ArrayList<>();
         countries.forEach(c -> blocks.addAll(blocks.size(), getBlocksLayoutForCountries(c, todayStat, yesterdayStat)));
         return blocks;
     }
 
-    @Override
-    public Object getType() {
-        return TYPE;
-    }
-
-    public List<LayoutBlock> getBlocksLayoutForCountries(
+    public List<T> getBlocksLayoutForCountries(
         List<String> countries,
         Map<String, Map> todayStat,
         Map<String, Map> yesterdayStat
     ) {
-        List<LayoutBlock> blocks = createBlocks(countries, todayStat, yesterdayStat);
-        blocks.add(blocks.size(), divider());
+        List<T> blocks = createBlocks(countries, todayStat, yesterdayStat);
+        T divider = templater.divider();
+        if (divider != null) {
+            blocks.add(blocks.size(), divider);
+        }
 
         return blocks;
     }
 
-    private static List<LayoutBlock> createBlocks(
+    private List<T> createBlocks(
         List<String> countries,
         Map<String, Map> todayStat,
         Map<String, Map> yesterdayStat
     ) {
         var actualOrderedKeys = new ArrayList<>();
-        var blocks = new HashMap<Object, LayoutBlock>();
+        var blocks = new HashMap<Object, T>();
 
         for (String country : countries) {
             String lcCountry = country.toLowerCase();
@@ -90,7 +86,7 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
                     continue;
                 }
                 String tpl = FUNNY_TPLS.get(new Random().nextInt(FUNNY_TPLS.size()));
-                blocks.put(lcCountry, section(s -> s.text(markdownText(String.format(tpl, country)))));
+                blocks.put(lcCountry, templater.funnySection(tpl, country));
                 actualOrderedKeys.add(lcCountry);
                 continue;
             }
@@ -121,23 +117,22 @@ public class CoronaSlackLayoutBuilder implements SlackLayoutBuilder {
                 todayDeaths = "+" + stats.get("todayDeaths");
             }
 
-            blocks.put(realCountryName, context(List.of(
-                BlockElements.image(s -> s.imageUrl(flagUrl).altText("Country Flag")),
-                markdownText(String.format(
-                    "*%s*: :pill: *%s* / %s  :skull_and_crossbones: *%s* / %s  :yin_yang:  %s / %s",
-                    stats.get("country"),
-                    todayCases,
-                    yesterdayCountryStat.get("todayCases"),
-                    todayDeaths,
-                    yesterdayCountryStat.get("todayDeaths"),
-                    stats.get("cases"),
-                    stats.get("deaths")
-                ))
-            )));
+            var templateData = CoronaTemplateData.builder()
+                .flagUrl(flagUrl)
+                .country(stats.get("country").toString())
+                .todayCases(todayCases)
+                .yesterdayCases(yesterdayCountryStat.get("todayCases").toString())
+                .todayDeaths(todayDeaths)
+                .yesterdayDeaths(yesterdayCountryStat.get("todayDeaths").toString())
+                .totalCases(stats.get("cases").toString())
+                .totalDeaths(stats.get("deaths").toString())
+                .build();
+
+            blocks.put(realCountryName, templater.countrySection(templateData));
             actualOrderedKeys.add(realCountryName);
         }
 
-        var result = new ArrayList<LayoutBlock>();
+        var result = new ArrayList<T>();
         actualOrderedKeys.forEach(k -> result.add(blocks.get(k)));
 
         return result;
