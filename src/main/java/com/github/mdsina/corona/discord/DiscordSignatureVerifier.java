@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import javax.inject.Singleton;
 
 @Singleton
@@ -13,7 +14,8 @@ public class DiscordSignatureVerifier {
     private final Ed25519Verify ed25519Verifier;
 
     public DiscordSignatureVerifier(DiscordProperties properties) {
-        this.ed25519Verifier = new Ed25519Verify(properties.getPublicKey().getBytes(StandardCharsets.UTF_8));
+        byte[] decodedPublicKey = Base64.getDecoder().decode(properties.getPublicKey());
+        this.ed25519Verifier = new Ed25519Verify(decodedPublicKey);
     }
 
     public void verifyRequest(String rawBody, String timestamp, String signature) {
