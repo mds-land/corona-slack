@@ -27,6 +27,8 @@ public class DiscordController {
         @Header("X-Signature-Ed25519") String signature
     ) {
         log.debug(rawBody);
+        log.debug(timestamp);
+        log.debug(signature);
 
         try {
             signatureVerifier.verifyRequest(rawBody, timestamp, signature);
