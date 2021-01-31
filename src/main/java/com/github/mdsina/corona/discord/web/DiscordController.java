@@ -1,5 +1,7 @@
 package com.github.mdsina.corona.discord.web;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.mdsina.corona.discord.DiscordSignatureVerifier;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
@@ -9,6 +11,7 @@ import io.micronaut.http.annotation.Header;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,13 +22,14 @@ import lombok.extern.slf4j.Slf4j;
 public class DiscordController {
 
     private final DiscordSignatureVerifier signatureVerifier;
+    private final ObjectMapper objectMapper;
 
-    @Post(consumes = {MediaType.APPLICATION_JSON})
+    @Post(consumes = {MediaType.APPLICATION_JSON}, produces = {MediaType.APPLICATION_JSON})
     public HttpResponse interactions(
         @Body String rawBody, // TODO: make as filter or interceptor
         @Header("X-Signature-Timestamp") String timestamp,
         @Header("X-Signature-Ed25519") String signature
-    ) {
+    ) throws JsonProcessingException {
         log.debug(rawBody);
         log.debug(timestamp);
         log.debug(signature);
@@ -33,7 +37,13 @@ public class DiscordController {
         try {
             signatureVerifier.verifyRequest(rawBody, timestamp, signature);
         } catch (Exception e) {
-            return HttpResponse.unauthorized().body(e.getMessage());
+            return HttpResponse.unauthorized().body(Map.of("error", e.getMessage()));
+        }
+
+        Map<String, Object> body = objectMapper.readValue(rawBody, Map.class);
+        int type = Integer.parseInt(body.get("type").toString());
+        if (type == 1) {
+            return HttpResponse.ok(Map.of("type", 1));
         }
 
         return HttpResponse.accepted();
