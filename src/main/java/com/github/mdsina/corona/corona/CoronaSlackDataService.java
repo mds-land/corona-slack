@@ -67,7 +67,7 @@ public class CoronaSlackDataService {
                     var embedFields = new ArrayList<Map<String, String>>();
 
                     for (Map<String, String> r : maps) {
-                        if (maps.get(0).containsKey("divider") && !embedFields.isEmpty()) {
+                        if (r.get("name").equals("divider") && !embedFields.isEmpty()) {
                             embeds.add(Map.of("fields", embedFields));
                             embedFields = new ArrayList<>();
                             continue;
