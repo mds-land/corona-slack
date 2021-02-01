@@ -19,7 +19,8 @@ public class CoronaDiscordLayoutTemplater implements CoronaLayoutTemplater<Map<S
     public Map<String, String> funnySection(String tpl, String country) {
         return Map.of(
             "name", country,
-            "value", String.format(tpl, country)
+            "value", String.format(tpl, country),
+            "funny", "yes"
         );
     }
 

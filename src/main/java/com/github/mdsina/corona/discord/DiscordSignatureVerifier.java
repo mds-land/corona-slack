@@ -23,7 +23,7 @@ public class DiscordSignatureVerifier {
 
         Instant timeInstant = Instant.ofEpochSecond(Long.parseLong(timestamp));
         if (timeInstant.plus(5, ChronoUnit.MINUTES).compareTo(Instant.now()) < 0) {
-            throw new RuntimeException("Timestamp too old.");
+//            throw new RuntimeException("Timestamp too old.");
         }
 
         try {

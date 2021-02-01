@@ -39,7 +39,7 @@ public class StoredTaskScheduler {
         this.taskScheduler = taskScheduler;
     }
 
-    @Scheduled(fixedDelay = "20s")
+//    @Scheduled(fixedDelay = "20s")
     void updateJobs() {
         teamConfigRepository.getEnabledConfigs()
             .doOnSuccess(configs -> {

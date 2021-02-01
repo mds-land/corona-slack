@@ -40,7 +40,7 @@ public class CoronaSlackDataService {
     }
 
     // TODO: refactor
-    public Mono<List<Map<String, List<Map<String, String>>>>> getDiscordSectionedActualStats(List<String> sections) {
+    public Mono<List<Map<String, Object>>> getDiscordSectionedActualStats(List<String> sections) {
         List<List<String>> processedSections = sections.isEmpty()
             ? getCountries(null)
             : getProcessedSections(sections);
@@ -59,17 +59,23 @@ public class CoronaSlackDataService {
                         ));
 
                     if (maps.isEmpty() || maps.size() == 1 && maps.get(0).containsKey("divider")) {
-                        return List.<Map<String, List<Map<String, String>>>>of();
+                        return List.<Map<String, Object>>of();
                     }
 
-                    var embeds = new ArrayList<Map<String, List<Map<String, String>>>>();
+                    var embeds = new ArrayList<Map<String, Object>>();
 
                     var embedFields = new ArrayList<Map<String, String>>();
 
                     for (Map<String, String> r : maps) {
-                        if (r.get("name").equals("divider") && !embedFields.isEmpty()) {
-                            embeds.add(Map.of("fields", embedFields));
-                            embedFields = new ArrayList<>();
+                        if (r.get("name").equals("divider")) {
+                            if (!embedFields.isEmpty()) {
+                                embeds.add(Map.of("fields", embedFields));
+                                embedFields = new ArrayList<>();
+                            }
+                            continue;
+                        }
+                        if (r.containsKey("funny")) {
+                            embeds.add(Map.of("description", r.get("value")));
                             continue;
                         }
                         embedFields.add(r);
