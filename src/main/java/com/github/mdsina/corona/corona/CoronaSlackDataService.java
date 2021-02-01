@@ -1,6 +1,8 @@
 package com.github.mdsina.corona.corona;
 
 import com.github.mdsina.corona.corona.chart.CoronaChartLayoutBuilder;
+import com.github.mdsina.corona.corona.discord.CoronaDiscordLayoutTemplater;
+import com.github.mdsina.corona.corona.layout.CoronaLayoutBuilder;
 import com.github.mdsina.corona.corona.slack.CoronaSlackLayoutBuilder;
 import com.github.mdsina.corona.slack.SlackLayoutApplier;
 import com.github.mdsina.corona.slack.SlackLayoutEntity;
@@ -14,6 +16,7 @@ import java.util.stream.Collectors;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Slf4j
 @Singleton
@@ -24,13 +27,35 @@ public class CoronaSlackDataService {
 
     private final SlackLayoutApplier layoutApplier;
     private final CoronaStatsDataProvider dataProvider;
+    private final CoronaDiscordLayoutTemplater discordLayoutTemplater;
 
     public CoronaSlackDataService(
         SlackLayoutApplier layoutApplier,
-        CoronaStatsDataProvider dataProvider
+        CoronaStatsDataProvider dataProvider,
+        CoronaDiscordLayoutTemplater discordLayoutTemplater
     ) {
         this.layoutApplier = layoutApplier;
         this.dataProvider = dataProvider;
+        this.discordLayoutTemplater = discordLayoutTemplater;
+    }
+
+    // TODO: refactor
+    public Mono<List<Map<String, String>>> getDiscordSectionedActualStats(List<String> sections) {
+        List<List<String>> processedSections = getProcessedSections(sections);
+        if (processedSections.isEmpty()) {
+            return Mono.just(List.of());
+        }
+        return dataProvider.get2DaysData()
+            .flatMap(daysData ->
+                Mono.fromCallable(() ->
+                    CoronaLayoutBuilder.withTemplater(discordLayoutTemplater)
+                        .buildLayout(Map.of(
+                            "todayStat", daysData.get("todayStat"),
+                            "yesterdayStat", daysData.get("yesterdayStat"),
+                            "countries", sections
+                        ))
+                ).subscribeOn(Schedulers.elastic())
+            );
     }
 
     public Mono<List<LayoutBlock>> getSectionedActualStatsBlocks(List<String> sections) {

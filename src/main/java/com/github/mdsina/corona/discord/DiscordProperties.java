@@ -10,4 +10,5 @@ import lombok.Setter;
 public class DiscordProperties {
 
     private String publicKey;
+    private String applicationId;
 }

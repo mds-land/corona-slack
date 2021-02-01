@@ -2,7 +2,9 @@ package com.github.mdsina.corona.corona.discord;
 
 import com.github.mdsina.corona.corona.layout.CoronaLayoutTemplater;
 import java.util.Map;
+import javax.inject.Singleton;
 
+@Singleton
 public class CoronaDiscordLayoutTemplater implements CoronaLayoutTemplater<Map<String, String>> {
 
     @Override
