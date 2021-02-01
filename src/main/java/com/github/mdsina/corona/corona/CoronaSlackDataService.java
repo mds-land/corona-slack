@@ -52,7 +52,7 @@ public class CoronaSlackDataService {
                         .buildLayout(Map.of(
                             "todayStat", daysData.get("todayStat"),
                             "yesterdayStat", daysData.get("yesterdayStat"),
-                            "countries", sections
+                            "countries", processedSections
                         ))
                 ).subscribeOn(Schedulers.elastic())
             );

@@ -120,6 +120,7 @@ public class CoronaLayoutBuilder<T> {
             var templateData = CoronaTemplateData.builder()
                 .flagUrl(flagUrl)
                 .country(stats.get("country").toString())
+                .countryCode(stats.get("iso2").toString().toLowerCase())
                 .todayCases(todayCases)
                 .yesterdayCases(yesterdayCountryStat.get("todayCases").toString())
                 .todayDeaths(todayDeaths)
