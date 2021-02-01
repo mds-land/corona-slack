@@ -9,7 +9,10 @@ public class CoronaDiscordLayoutTemplater implements CoronaLayoutTemplater<Map<S
 
     @Override
     public Map<String, String> divider() {
-        return null;
+        return Map.of(
+            "name", "divider",
+            "value", "true"
+        );
     }
 
     @Override

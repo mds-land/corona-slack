@@ -69,9 +69,7 @@ public class DiscordController {
                     .flatMap(res -> discordWebhooksClient.postFollowMessage(
                         discordProperties.getApplicationId(),
                         body.get("token").toString(),
-                        Map.of("embeds", List.of(Map.of(
-                            "fields", res
-                        )))
+                        Map.of("embeds", res)
                     ))
                     .subscribe();
 

@@ -40,7 +40,7 @@ public class CoronaSlackDataService {
     }
 
     // TODO: refactor
-    public Mono<List<Map<String, String>>> getDiscordSectionedActualStats(List<String> sections) {
+    public Mono<List<Map<String, List<Map<String, String>>>>> getDiscordSectionedActualStats(List<String> sections) {
         List<List<String>> processedSections = sections.isEmpty()
             ? getCountries(null)
             : getProcessedSections(sections);
@@ -50,14 +50,37 @@ public class CoronaSlackDataService {
         }
         return dataProvider.get2DaysData()
             .flatMap(daysData ->
-                Mono.fromCallable(() ->
-                    CoronaLayoutBuilder.withTemplater(discordLayoutTemplater)
+                Mono.fromCallable(() -> {
+                    List<Map<String, String>> maps = CoronaLayoutBuilder.withTemplater(discordLayoutTemplater)
                         .buildLayout(Map.of(
                             "todayStat", daysData.get("todayStat"),
                             "yesterdayStat", daysData.get("yesterdayStat"),
                             "countries", processedSections
-                        ))
-                ).subscribeOn(Schedulers.elastic())
+                        ));
+
+                    if (maps.isEmpty() || maps.size() == 1 && maps.get(0).containsKey("divider")) {
+                        return List.<Map<String, List<Map<String, String>>>>of();
+                    }
+
+                    var embeds = new ArrayList<Map<String, List<Map<String, String>>>>();
+
+                    var embedFields = new ArrayList<Map<String, String>>();
+
+                    for (Map<String, String> r : maps) {
+                        if (maps.get(0).containsKey("divider") && !embedFields.isEmpty()) {
+                            embeds.add(Map.of("fields", embedFields));
+                            embedFields = new ArrayList<>();
+                            continue;
+                        }
+                        embedFields.add(r);
+                    }
+
+                    if (!embedFields.isEmpty()) {
+                        embeds.add(Map.of("fields", embedFields));
+                    }
+
+                    return embeds;
+                }).subscribeOn(Schedulers.elastic())
             );
     }
 
