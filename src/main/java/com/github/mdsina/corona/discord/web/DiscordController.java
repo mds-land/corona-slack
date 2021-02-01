@@ -58,13 +58,12 @@ public class DiscordController {
             Map<String, Object> data = (Map<String, Object>) body.get("data");
 
             if (data.get("name").toString().startsWith("corona")) {
-                List<Map<String, String>> options = List.of();
+                List<String> countries = List.of();
 
                 if (data.containsKey("options")) {
-                    options = (List<Map<String, String>>) data.get("options");
+                    var options = (List<Map<String, String>>) data.get("options");
+                    countries = List.of(StringUtils.tokenizeToStringArray(options.get(0).get("value"), ","));
                 }
-
-                List<String> countries = List.of(StringUtils.tokenizeToStringArray(options.get(0).get("value"), ","));
 
                 coronaSlackDataService.getDiscordSectionedActualStats(countries)
                     .flatMap(res -> discordWebhooksClient.postFollowMessage(

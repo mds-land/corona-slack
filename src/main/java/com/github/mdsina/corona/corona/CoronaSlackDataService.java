@@ -41,7 +41,10 @@ public class CoronaSlackDataService {
 
     // TODO: refactor
     public Mono<List<Map<String, String>>> getDiscordSectionedActualStats(List<String> sections) {
-        List<List<String>> processedSections = getProcessedSections(sections);
+        List<List<String>> processedSections = sections.isEmpty()
+            ? getCountries(null)
+            : getProcessedSections(sections);
+
         if (processedSections.isEmpty()) {
             return Mono.just(List.of());
         }
