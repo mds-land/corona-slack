@@ -48,7 +48,7 @@ public class WotdScheduledTasks {
             .subscribeOn(Schedulers.elastic())
             .doOnError(e -> {
                 log.error("Error occurred on running task. Task will be rescheduled.", e);
-                retryableTaskRunner.run(this::sendWotd);
+//                retryableTaskRunner.run(this::sendWotd);
             })
             .subscribe()
         );
